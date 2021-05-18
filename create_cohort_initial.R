@@ -83,8 +83,3 @@ View(res_list)
 
 
 
-
-# dies das Ananas
-
-
-
