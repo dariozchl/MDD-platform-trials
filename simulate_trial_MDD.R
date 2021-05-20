@@ -32,9 +32,13 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     cohorts_left <- coh_left_check(x=res_list)
 
     # update allocation ratio
-    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration)
+    res_list <- update_alloc_ratio(res_list)
 
+    
+    # check whether new cohort is added
+    # if yes, add new cohort
 
+    
     # sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD
     n <- rpois(n=2, lambda=patients_per_timepoint)
@@ -58,6 +62,9 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     timestamp <- timestamp + 1
 
     TOTAL_N <- total_n(res_list)
+    
+    make_decision <- function(res_list) { }
+    
     if(TOTAL_N[[1]] > 150 | TOTAL_N[[2]] > 150){trial_stop=TRUE}
   }
 

@@ -44,7 +44,7 @@ create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_ef
 
 
 
-res_list <- create_cohort_new(res_list, n_int=50, n_fin=100, sharing_type=sharing_type, treatment_effects=treatment_effects,
-                              way_of_administration="IV", applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
-View(res_list)
-
+# res_list <- create_cohort_new(res_list, n_int=50, n_fin=100, sharing_type=sharing_type, treatment_effects=treatment_effects,
+#                               way_of_administration="IV", applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+# View(res_list)
+# 

@@ -36,6 +36,6 @@ update_alloc_ratio <- function(res_list) {
   return(res_list)
 }
 
-res_list <- update_alloc_ratio(res_list)
-View(res_list)
+# res_list <- update_alloc_ratio(res_list)
+# View(res_list)
 

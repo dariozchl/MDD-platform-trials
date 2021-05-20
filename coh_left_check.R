@@ -9,5 +9,5 @@ coh_left_check <- function(x) {
   return(cbind(as.data.frame(cohorts_left_TRD), as.data.frame(cohorts_left_PRD)))
 }
 
-coh_left_check(x=res_list)
+#coh_left_check(x=res_list)
 
