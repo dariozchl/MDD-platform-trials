@@ -1,3 +1,5 @@
+# this is the main function
+
 library(mvtnorm)
 
 simulate_trial <- function(cohorts_start, n_int, n_fin,
