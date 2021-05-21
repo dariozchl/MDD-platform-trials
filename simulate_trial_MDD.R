@@ -48,13 +48,15 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     for(population in 1:2){
       for (i in row.names(cohorts_left)[cohorts_left[,population]]) {
 
-        n_arm <- floor(n[population] * res_list[[population]][[i]]$prob_admin * res_list[[population]][[i]]$alloc_ratio)
-        response <- res_list[[population]][[i]]$response
-
-        if(n_arm >= 1){
-          draw <- rmvnorm(n=n_arm, mean=response$mean, sigma=response$sigma)
-          draw <- cbind(draw, timestamp)
-          res_list[[population]][[i]]$endpoint <- rbind(res_list[[population]][[i]]$endpoint, draw)
+        if(!is.null(res_list[[population]][[i]]$alloc_ratio)){ # the allocation ratio is NULL if there is no treatment, only control
+          n_arm <- floor(n[population] * res_list[[population]][[i]]$prob_admin * res_list[[population]][[i]]$alloc_ratio)
+          response <- res_list[[population]][[i]]$response
+          
+          if(n_arm >= 1){
+            draw <- rmvnorm(n=n_arm, mean=response$mean, sigma=response$sigma)
+            draw <- cbind(draw, timestamp)
+            res_list[[population]][[i]]$endpoint <- rbind(res_list[[population]][[i]]$endpoint, draw)
+          }
         }
       }
     }
@@ -63,9 +65,36 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
 
     TOTAL_N <- total_n(res_list)
     
-    make_decision <- function(res_list) { }
+    # a dummy make_decision function that randomly makes decisions
+    make_decision <- function(res_list) { 
+      for(population in 1:2){
+        for(i in 1:length(ways_of_administration)){
+          arms_within_administration <- grep(ways_of_administration[i], names(res_list[[population]]), value=TRUE)[-1] # first one is always control, for which no decision should be made
+          for(j in arms_within_administration){
+            if(!is.null(res_list[[population]][[j]]$endpoint)){
+              if(nrow(res_list[[population]][[j]]$endpoint) > 100 & res_list[[population]][[j]]$decision[2] == "none"){
+                res_list[[population]][[j]]$decision[2] <- sample(c("SUCCESS", "FAILURE"), size=1)
+              } else if(nrow(res_list[[population]][[j]]$endpoint) > 50 & res_list[[population]][[j]]$decision[1] == "none"){
+                res_list[[population]][[j]]$decision[1] <- sample(c("CONTINUE", "STOP"), size=1)
+              }
+            }
+          }
+        }
+      }
+      return(res_list)
+    }
     
-    if(TOTAL_N[[1]] > 150 | TOTAL_N[[2]] > 150){trial_stop=TRUE}
+    res_list <- make_decision(res_list)
+    
+    coh_left_check(res_list)
+    
+    if(sum(colSums(coh_left_check(res_list))) == 3){trial_stop=TRUE}
+    
+    
+    if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}
+    
+    print(timestamp)
+    
   }
 
   return(res_list)
