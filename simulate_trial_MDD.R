@@ -7,7 +7,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
                            alloc_ratio_administration="fixed", alloc_ratio_control="fixed",
                            alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type="all",
-                           patients_per_timepoint=c(30,30)) {
+                           patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_cohorts) {
 
   ##### Initialization #####
 
@@ -37,7 +37,16 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     # check whether new cohort is added
     # if yes, add new cohort
-
+    add_new_cohort <- rbinom(n=3, size=1, prob=cohorts_per_timepoint)
+    for(i in 1:length(ways_of_administration)){
+      if(add_new_cohort[i] == 1 & nrow(cohorts_left) <= max_cohorts){
+        res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
+                                      treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
+                                      applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+      }
+    }
+    
+  
     
     # sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD
@@ -46,10 +55,16 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
 
     # Get new patients and responders for each cohort
     for(population in 1:2){
+      
+      
+      all_alloc_ratios <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$alloc_ratio))
+      all_prob_admins <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$prob_admin))
+      
+      if(sum(all_alloc_ratios * all_prob_admins) > 0){ n_all_arms <- rmultinom(n=1, size=n[population], prob=all_alloc_ratios * all_prob_admins) } else {n_all_arms <- 0}
+      
       for (i in row.names(cohorts_left)[cohorts_left[,population]]) {
 
-        if(!is.null(res_list[[population]][[i]]$alloc_ratio)){ # the allocation ratio is NULL if there is no treatment, only control
-          n_arm <- floor(n[population] * res_list[[population]][[i]]$prob_admin * res_list[[population]][[i]]$alloc_ratio)
+          n_arm <- n_all_arms[grep(i, rownames(n_all_arms))]
           response <- res_list[[population]][[i]]$response
           
           if(n_arm >= 1){
@@ -86,9 +101,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     res_list <- make_decision(res_list)
     
-    coh_left_check(res_list)
-    
-    if(sum(colSums(coh_left_check(res_list))) == 3){trial_stop=TRUE}
+    if(all(colSums(coh_left_check(res_list)) == 3)){trial_stop=TRUE}
     
     
     if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}

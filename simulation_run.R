@@ -2,12 +2,12 @@
 # This is a function to run the simulations
 
 
-source("C:/Users/zocholdo/Documents/Temporary/EU-Pearl/Code/MDD-platform-trials/MDD-platform-trials/create_cohort_initial.R")
-source("C:/Users/zocholdo/Documents/Temporary/EU-Pearl/Code/MDD-platform-trials/MDD-platform-trials/coh_left_check.R")
-source("C:/Users/zocholdo/Documents/Temporary/EU-Pearl/Code/MDD-platform-trials/MDD-platform-trials/total_n.R")
-source("C:/Users/zocholdo/Documents/Temporary/EU-Pearl/Code/MDD-platform-trials/MDD-platform-trials/update_alloc_ratio.R")
-source("C:/Users/zocholdo/Documents/Temporary/EU-Pearl/Code/MDD-platform-trials/MDD-platform-trials/create_cohort_new.R")
-source("C:/Users/zocholdo/Documents/Temporary/EU-Pearl/Code/MDD-platform-trials/MDD-platform-trials/simulate_trial_MDD.R")
+source("create_cohort_initial.R")
+source("coh_left_check.R")
+source("total_n.R")
+source("update_alloc_ratio.R")
+source("create_cohort_new.R")
+source("simulate_trial_MDD.R")
 
 
 cohorts_start <- list("pill"=3, "IV"=2, "nasal"=2)
@@ -37,7 +37,7 @@ results <- simulate_trial(cohorts_start=cohorts_start, n_int=list("TRD"=50,"PRD"
                           alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
                           cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                           sharing_type="all",
-                          patients_per_timepoint=c(30,30))
+                          patients_per_timepoint=c(30,30), cohorts_per_timepoint=c(0.1,0.05,0.05), max_cohorts=30)
 
 View(results)
 
@@ -56,11 +56,9 @@ View(results)
 # alloc_ratio_administration_values=NULL; alloc_ratio_control_values=0.35;
 # cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD; cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD;
 # sharing_type="all";
-# patients_per_timepoint=c(300,300)
+# patients_per_timepoint=c(300,300); cohorts_per_timepoint=c(0.1,0.05,0.05); max_cohorts=30
 # 
 # 
 # 
 # 
-# 
-
 
