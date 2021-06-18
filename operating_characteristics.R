@@ -10,9 +10,8 @@ operating_characteristics <- function(res_list){
   
   decisions <- cbind(as.data.frame(decisions_TRD), as.data.frame(decisions_PRD))
   
+
   # effect sizes: using the fact that X - Y ~ N(mu_X - mu_Y, sd_X^2 + sd_Y^2 - 2 * cov_XY)
-  
-  
   cohens_d_TRD <- c()
   for(way_of_administration in c("pill", "IV", "nasal")) {
     mean_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] - res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
@@ -40,14 +39,21 @@ operating_characteristics <- function(res_list){
   }
   
   
+  ocs <- merge(decisions, cbind(as.data.frame(cohens_d_TRD), as.data.frame(cohens_d_PRD)), by="row.names")
+  rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
+  ocs <- ocs[2:length(ocs)]
   
-  merge(decisions, cbind(as.data.frame(cohens_d_TRD), as.data.frame(cohens_d_PRD)), by="row.names")
-  
-    
   # total number of patients
-  # number of patients on effective treatments
-  # number of patients on ineffective treatments
-  # number of patients on control treatments
+  n_TRD <- sapply(res_list$TRD, function(y) {nrow(y$endpoint)})
+  n_PRD <- sapply(res_list$PRD, function(y) {nrow(y$endpoint)})
+  
+  n <- cbind(as.data.frame(n_TRD), as.data.frame(n_PRD))
+  
+  ocs <- merge(ocs, n, by="row.names")
+  rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
+  ocs <- ocs[2:length(ocs)]
+  
+  
   
   # estimated treatment effect and difference to true treatment effect
   
