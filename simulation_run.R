@@ -7,8 +7,9 @@ source("coh_left_check.R")
 source("total_n.R")
 source("update_alloc_ratio.R")
 source("create_cohort_new.R")
+source("make_decision_trialNEW.R")
+source("make_decision_wrapper.R")
 source("simulate_trial_MDD.R")
-source("make_decision_dummy.R")
 
 
 cohorts_start <- list("pill"=3, "IV"=2, "nasal"=2)
