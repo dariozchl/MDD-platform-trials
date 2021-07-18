@@ -17,20 +17,20 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   
   
   # Treatment group difference
-  diff_after_treat <- results[[which_pop]][which_treat]$endpoint[,1] -
-                      results[[which_pop]][which_treat]$endpoint[,1+which_measure]
+  diff_after_treat <- results[[which_pop]][[which_treat]]$data[,1] -
+                      results[[which_pop]][[which_treat]]$data[,1+which_measure]
   
  
   # Placebo group
     if (control_type == "all") {
-      diff_after_cont <- results[[which_pop]][[control_needed]]$endpoint[,1] -
-        results[[which_pop]][[control_needed]]$endpoint[,1+which_measure]
+      diff_after_cont <- results[[which_pop]][[control_needed]]$data[,1] -
+        results[[which_pop]][[control_needed]]$data[,1+which_measure]
      }
     
     if (control_type == "concurrent") {
-       conc_times <- unique(results[[which_pop]][which_treat]$endpoint[,which(colnames(results[[which_pop]][which_treat]$endpoint) == "timestamp")])
-       conc_controls <- results[[which_pop]][[control_needed]]$endpoint[
-         which(results[[which_pop]][[control_needed]]$endpoint[,which(colnames(results[[which_pop]][which_treat]$endpoint) == 
+       conc_times <- unique(results[[which_pop]][[which_treat]]$data[,which(colnames(results[[which_pop]][[which_treat]]$data) == "timestamp")])
+       conc_controls <- results[[which_pop]][[control_needed]]$data[
+         which(results[[which_pop]][[control_needed]]$data[,which(colnames(results[[which_pop]][[which_treat]]$data) == 
                  "timestamp")] %in% conc_times == TRUE),]
        diff_after_cont <- conc_controls[,1] - conc_controls[,1+which_measure]
        }
@@ -62,8 +62,8 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   res_bayesLM <- list(mean_effect = mean(posteriors$arm1),
                       median_effect = median(posteriors$arm1),
                       HighestDensityInterval = hd_int,
-                      decision = ifelse(cont0_bayes == TRUE, "unsuccessfull", 
-                                        "successfull"))
+                      decision = ifelse(cont0_bayes == TRUE, "failure", 
+                                        "success"))
 }
   # ########## P-Value Superiority Criteria ##########
   
@@ -82,7 +82,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   res_freqLM <- list(mean_effect = unname(model_freq$coefficients[2]),
                       ConfidenceInterval = conf_int,
                       decision = ifelse(cont0_freq == TRUE, ifelse(interim ==TRUE,"stopped early",
-                      "failure"), "successfull"))
+                      "failure"), "success"))
    
   }  
 if(test_type == "both"){

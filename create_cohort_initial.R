@@ -22,9 +22,9 @@ create_cohort_initial <- function(cohorts_start, n_int, n_fin, treatment_effects
     cohorts_per_administration_PRD[[i]] <- rep(ways_of_administration[i], sum(cohorts_start_PRD[[i]]))
   }
 
-  res_list <- list("TRD"=rep(list(c(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n = 0, response = NULL, endpoint = NULL, n = NULL))),
+  res_list <- list("TRD"=rep(list(c(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n = 0, response = NULL, data = NULL, n = NULL))),
                              sum(unlist(cohorts_start_TRD))+length(ways_of_administration)), # +length(ways_of_administration) to add a control for each way of administration
-                   "PRD"=rep(list(c(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n = 0, response = NULL, endpoint = NULL, n = NULL))),
+                   "PRD"=rep(list(c(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n = 0, response = NULL, data = NULL, n = NULL))),
                              sum(unlist(cohorts_start_PRD))+length(ways_of_administration)))
 
   # naming the cohorts appropriately for both TRD and PRD

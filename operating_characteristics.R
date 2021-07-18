@@ -44,8 +44,8 @@ operating_characteristics <- function(res_list){
   ocs <- ocs[2:length(ocs)]
   
   # total number of patients
-  n_TRD <- sapply(res_list$TRD, function(y) {nrow(y$endpoint)})
-  n_PRD <- sapply(res_list$PRD, function(y) {nrow(y$endpoint)})
+  n_TRD <- sapply(res_list$TRD, function(y) {nrow(y$data)})
+  n_PRD <- sapply(res_list$PRD, function(y) {nrow(y$data)})
   
   n <- cbind(as.data.frame(n_TRD), as.data.frame(n_PRD))
   

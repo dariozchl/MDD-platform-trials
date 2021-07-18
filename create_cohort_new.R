@@ -9,7 +9,7 @@ create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_ef
   if(applicable_to_TRD & applicable_to_PRD){
     new_list <- list(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n =  total_n(res_list$TRD),
                           response = treatment_effects$TRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]],
-                          endpoint = NULL,
+                          data = NULL,
                           n = rep(NA, length(res_list$TRD[[paste0(way_of_administration, "_Control")]]$n))))
     # assign name to the new treatment: find highest already existing treatment index among this way of administration and add +1
     names_of_treatments <- c(names(res_list$TRD), names(res_list$PRD))[grep(paste0(way_of_administration,"_Treatment"),c(names(res_list$TRD), names(res_list$PRD)))]
@@ -22,7 +22,7 @@ create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_ef
     ### repeat the same for PRD
     new_list <- list(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n =  total_n(res_list$PRD),
                           response = treatment_effects$PRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]],
-                          endpoint = NULL,
+                          data = NULL,
                           n = rep(NA, length(res_list$PRD[[paste0(way_of_administration, "_Control")]]$n))))
     
     res_list$PRD <- c(res_list$PRD, new_list)

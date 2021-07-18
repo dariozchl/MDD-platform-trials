@@ -70,7 +70,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
         if(n_arm >= 1){
           draw <- rmvnorm(n=n_arm, mean=response$mean, sigma=response$sigma)
           draw <- cbind(draw, timestamp)
-          res_list[[population]][[i]]$endpoint <- rbind(res_list[[population]][[i]]$endpoint, draw)
+          res_list[[population]][[i]]$data <- rbind(res_list[[population]][[i]]$data, draw)
         }
       }
     }
@@ -85,6 +85,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}
     
     print(timestamp)
+    trial_stop
   }
     
     return(res_list)
