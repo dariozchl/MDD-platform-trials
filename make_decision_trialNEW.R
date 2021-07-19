@@ -35,10 +35,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
        diff_after_cont <- conc_controls[,1] - conc_controls[,1+which_measure]
        }
     
-  cohensD <- sqrt(abs(mean(diff_after_cont) - mean(diff_after_treat))/
-                (((length(diff_after_cont)-1)*sd(diff_after_cont))+
-                    ((length(diff_after_treat)-1)*sd(diff_after_treat)))/
-                    (length(diff_after_cont)+length(diff_after_treat)-2))
+  cohensD <- (mean(diff_after_cont) - mean(diff_after_treat)) / ((((length(diff_after_cont)-1)*sd(diff_after_cont)) + ((length(diff_after_treat)-1)*sd(diff_after_treat))) / (length(diff_after_cont)+length(diff_after_treat)-2))
   
   response_data <- data.frame(diff = c(diff_after_treat, diff_after_cont),
                               arm = factor(c(rep(1,length(diff_after_treat)),
