@@ -22,9 +22,10 @@ cohorts_start_applic_to_PRD <- list("pill"=3, "IV"=2, "nasal"=2)
 # names must be given as paste0(way_of_administration, "_Control") or paste0(way_of_administration, "_Treatment")
 treatment_effects <- list("TRD"=list("pill_Control"=list(list("mean"=c(5, 10),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1),
                                      "pill_Treatment"=list(list("mean"=c(6,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,18),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.4,0.3)),
-                                     "IV_Control"=list(list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1),
-                                     "IV_Treatment"=list(list("mean"=c(9,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(15,18),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.3,0.4)),
-                                     "nasal_Control"=list(list("mean"=c(12,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1), "nasal_Treatment"=list(list("mean"=c(4,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(13,18),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.2,0.5))),
+                                     "IV_Control"=list(list("mean"=c(15,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1),
+                                     "IV_Treatment"=list(list("mean"=c(15,8),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(15,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(15,5),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.3,0.4)),
+                                     "nasal_Control"=list(list("mean"=c(12,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1), 
+                                     "nasal_Treatment"=list(list("mean"=c(10,4),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(15,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(15, 5),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.2,0.5))),
                           "PRD"=list("pill_Control"=list(list("mean"=c(5, 10),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1),
                                      "pill_Treatment"=list(list("mean"=c(6,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,18),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.4,0.3)),
                                      "IV_Control"=list(list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=1), "IV_Treatment"=list(list("mean"=c(9,10),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(10,15),"sigma"=matrix(c(5,2,2,5), ncol=2)), list("mean"=c(15,18),"sigma"=matrix(c(5,2,2,5), ncol=2)), probs=c(0.3,0.3,0.4)),

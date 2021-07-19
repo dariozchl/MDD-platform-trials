@@ -12,8 +12,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   
 
   #which control-cohort needed
-  control_needed <- which(names(results[[which_pop]]) == 
-                            paste0(which_admin,"_Control",sep=""))
+  control_needed <- which(names(results[[which_pop]]) == paste0(which_admin,"_Control",sep=""))
   
   
   # Treatment group difference
@@ -35,11 +34,11 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
        diff_after_cont <- conc_controls[,1] - conc_controls[,1+which_measure]
        }
     
-  cohensD <- (mean(diff_after_cont) - mean(diff_after_treat)) / ((((length(diff_after_cont)-1)*sd(diff_after_cont)) + ((length(diff_after_treat)-1)*sd(diff_after_treat))) / (length(diff_after_cont)+length(diff_after_treat)-2))
-  
+  cohensD <- (mean(diff_after_treat) - mean(diff_after_cont)) / ((((length(diff_after_cont)-1)*sd(diff_after_cont)) + ((length(diff_after_treat)-1)*sd(diff_after_treat))) / (length(diff_after_cont)+length(diff_after_treat)-2))
+
   response_data <- data.frame(diff = c(diff_after_treat, diff_after_cont),
                               arm = factor(c(rep(1,length(diff_after_treat)),
-                                      rep(0,length(diff_after_cont)))))
+                                             rep(0,length(diff_after_cont)))))
    ########## Bayesian Two-Arm Superiority Criteria ###############
   
   if(test_type %in% c("bayes","both")){
@@ -75,7 +74,8 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   model_freq <- lm(diff~arm, data=response_data)
   conf_int <- unname(confint(model_freq, level = 1-p_valUSE)[2,])
   cont0_freq <- conf_int[1] <= 0 
-  cohensD <- unname(lm(scale(diff) ~ scale(as.numeric(arm)), data=response_data)$coefficients[2])
+  #alternative way to specify the effect size: use standardized regression coefficient
+  #cohensD <- unname(lm(scale(diff) ~ scale(as.numeric(arm)), data=response_data)$coefficients[2])
   
   res_freqLM <- list(mean_effect = unname(model_freq$coefficients[2]),
                       ConfidenceInterval = conf_int,

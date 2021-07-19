@@ -15,13 +15,13 @@ operating_characteristics <- function(res_list){
   cohens_d_TRD <- c(); cohens_d_TRD_est <- c()
   for(way_of_administration in c("pill", "IV", "nasal")) {
     mean_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] - res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
-    var_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4]^2 + res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1]^2 - 2 * res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
+    var_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4] + res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1] - 2 * res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
     
     cohens_d_TRD <- c(cohens_d_TRD,
                       sapply(res_list$TRD[grep(pattern=way_of_administration, names(res_list$TRD))], function(y) {
                         mean_baseline_change <- y$response$mean[2] - y$response$mean[1]
-                        var_baseline_change <- y$response$sigma[4]^2 + y$response$sigma[1]^2 - 2 * y$response$sigma[2]
-                        return( (mean_baseline_change - mean_baseline_change_control) / (sqrt( (var_baseline_change + var_baseline_change_control) / 2 )) )
+                        var_baseline_change <- y$response$sigma[4] + y$response$sigma[1] - 2 * y$response$sigma[2]
+                        return( (mean_baseline_change_control - mean_baseline_change) / (sqrt( (var_baseline_change + var_baseline_change_control) / 2 )) )
                       }))
     
     cohens_d_TRD_est <- c(cohens_d_TRD_est, 
@@ -31,13 +31,13 @@ operating_characteristics <- function(res_list){
   cohens_d_PRD <- c(); cohens_d_PRD_est <- c()
   for(way_of_administration in c("pill", "IV", "nasal")) {
     mean_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] - res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
-    var_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4]^2 + res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1]^2 - 2 * res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
+    var_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4] + res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1] - 2 * res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
     
     cohens_d_PRD <- c(cohens_d_PRD,
                       sapply(res_list$PRD[grep(pattern=way_of_administration, names(res_list$PRD))], function(y) {
                         mean_baseline_change <- y$response$mean[2] - y$response$mean[1]
-                        var_baseline_change <- y$response$sigma[4]^2 + y$response$sigma[1]^2 - 2 * y$response$sigma[2]
-                        return( (mean_baseline_change - mean_baseline_change_control) / (sqrt( (var_baseline_change + var_baseline_change_control) / 2 )) )
+                        var_baseline_change <- y$response$sigma[4] + y$response$sigma[1] - 2 * y$response$sigma[2]
+                        return( (mean_baseline_change_control - mean_baseline_change) / (sqrt( (var_baseline_change + var_baseline_change_control) / 2 )) )
                       }))
     cohens_d_PRD_est <- c(cohens_d_PRD_est, 
                           sapply(res_list$PRD[grep(pattern=way_of_administration, names(res_list$PRD))], function(y) {return(ifelse(is.null(y$endpoint$cohens_d), 0, y$endpoint$cohens_d))}))
@@ -61,9 +61,6 @@ operating_characteristics <- function(res_list){
   return(ocs)
   
   
-  
-  # estimated treatment effect and difference to true treatment effect
-  
   # duration of the trial
   
   # total number of treatments per way of administration
@@ -71,7 +68,10 @@ operating_characteristics <- function(res_list){
   
 }
 
-operating_characteristics(results)
 
+operating_characteristics(results) 
 
-
+# probability that an effect size > crit_d is claimed as success
+# probability that an effect size = 0 is claimed as success
+# library(tidyverse)
+# ocs %>% filter(cohens_d_TRD > 0.29) %>% group_by(decisions_TRD) %>% summarise(n=n())
