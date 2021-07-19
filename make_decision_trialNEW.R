@@ -74,12 +74,12 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
     
   model_freq <- lm(diff~arm, data=response_data)
   conf_int <- unname(confint(model_freq, level = 1-p_valUSE)[2,])
-  cont0_freq <- conf_int[1] <= 0 &  conf_int[2] >= 0
+  cont0_freq <- conf_int[1] <= 0 
+  cohensD <- unname(lm(scale(diff) ~ scale(as.numeric(arm)), data=response_data)$coefficients[2])
   
   res_freqLM <- list(mean_effect = unname(model_freq$coefficients[2]),
                       ConfidenceInterval = conf_int,
-                      decision = ifelse(cont0_freq == TRUE, ifelse(interim ==TRUE,"stopped early",
-                      "failure"), "success"))
+                      decision = ifelse(cont0_freq == TRUE, ifelse(interim ==TRUE,"stopped early","failure"), "success"))
    
   }  
 if(test_type == "both"){

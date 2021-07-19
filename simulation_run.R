@@ -41,24 +41,8 @@ results <- simulate_trial(cohorts_start=cohorts_start, n_int=list("TRD"=50,"PRD"
                           sharing_type="all",
                           patients_per_timepoint=c(30,30), cohorts_per_timepoint=c(0.1,0.05,0.05), max_cohorts=30)
 
-View(results)
+# View(results)
 
-
-
-
-
-
-
-
-# for testing purposes:
-
-# cohorts_start=cohorts_start; n_int=list("TRD"=50,"PRD"=50); n_fin=list("TRD"=100,"PRD"=100);
-# treatment_effects=treatment_effects; ways_of_administration=c("pill", "IV", "nasal");
-# alloc_ratio_administration="fixed"; alloc_ratio_control="fixed";
-# alloc_ratio_administration_values=NULL; alloc_ratio_control_values=0.35;
-# cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD; cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD;
-# sharing_type="all";
-# patients_per_timepoint=c(300,300); cohorts_per_timepoint=c(0.02,0.01,0.01); max_cohorts=30
 
 
 
