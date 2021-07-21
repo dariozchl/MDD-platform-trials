@@ -1,6 +1,6 @@
-library(rstan)
-library(rstanarm)
-library(HDInterval)
+# library(rstan)
+# library(rstanarm)
+# library(HDInterval)
 
 make_decision_trial <- function(results, which_pop=c("TRD","PRD"), 
                                 which_admin=c("pill","nasal","IV"), 

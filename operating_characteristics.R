@@ -55,23 +55,26 @@ operating_characteristics <- function(res_list){
   
   n <- cbind(as.data.frame(n_TRD), as.data.frame(n_PRD))
   
+  # duration of each arm
+  last_timestamp_TRD <- sapply(results$TRD, function(y) max(y$data[,3]))
+  last_timestamp_PRD <- sapply(results$PRD, function(y) max(y$data[,3]))
+  last_timestamp <- cbind(as.data.frame(last_timestamp_TRD), as.data.frame(last_timestamp_PRD))
+  
   ocs <- merge(ocs, n, by="row.names")
   rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
   ocs <- ocs[2:length(ocs)]
   return(ocs)
   
-  
-  # duration of the trial
-  
-  # total number of treatments per way of administration
-  
-  
 }
 
 
-operating_characteristics(results) 
 
-# probability that an effect size > crit_d is claimed as success
-# probability that an effect size = 0 is claimed as success
-# library(tidyverse)
-# ocs %>% filter(cohens_d_TRD > 0.29) %>% group_by(decisions_TRD) %>% summarise(n=n())
+
+
+
+
+
+
+
+
+

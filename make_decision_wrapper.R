@@ -18,7 +18,7 @@ make_decision_wrapper <- function(res_list) {
                                             which_admin=ways_of_administration[i], 
                                             which_treat=j, which_measure = 1,
                                             test_type = "freq", interim = TRUE,
-                                            control_type = "all",
+                                            control_type = "concurrent",
                                             hdi_perc = c(0.9,0.95), p_val = c(0.25,0.25))
             res_list[[population]][[j]]$decision[1] <- output[[1]]$decision
             res_list[[population]][[j]]$endpoint <- list("mean_effect"=output[[1]][[1]], "conf_int"=output[[1]][[2]], "cohens_d"=output[[2]])

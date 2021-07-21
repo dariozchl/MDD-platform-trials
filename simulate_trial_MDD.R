@@ -7,7 +7,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
                            alloc_ratio_administration="fixed", alloc_ratio_control="fixed",
                            alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type="all",
-                           patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_cohorts) {
+                           patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_treatments, latest_timepoint_treatment_added) {
 
   ##### Initialization #####
 
@@ -30,16 +30,17 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     # Check which cohorts are recruiting
     cohorts_left <- coh_left_check(x=res_list)
-    
+
     # update allocation ratio
     res_list <- update_alloc_ratio(res_list)
     
     
-    # check whether new cohort is added
-    # if yes, add new cohort
+    # check whether new cohort should be added
     add_new_cohort <- rbinom(n=3, size=1, prob=cohorts_per_timepoint)
+    
     for(i in 1:length(ways_of_administration)){
-      if(add_new_cohort[i] == 1 & nrow(cohorts_left) <= max_cohorts){
+      current_treatments <- sum(rowSums(cohorts_left[grep(ways_of_administration[i], row.names(cohorts_left)),]) >= 1) - 1 # counts how many treatments per admin are active either in PRD or in TRD. One cohort_left is always control, so -1
+      if(add_new_cohort[i] == 1 & (current_treatments < max_treatments[i]) & timestamp<latest_timepoint_treatment_added){ 
         res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
                                       treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
                                       applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
@@ -64,7 +65,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
       
       for (i in row.names(n_all_arms)) {
         
-        n_arm <- n_all_arms[grep(i, rownames(n_all_arms))]
+        n_arm <- n_all_arms[grep(paste0("^", i, "$"), rownames(n_all_arms))] # ^ asserts that we are at the start. $ asserts that we are at the end. If there were treatment1 and treatment10, then "treatment1" would be found twice.
         response <- res_list[[population]][[i]]$response
         
         if(n_arm >= 1){
@@ -85,7 +86,6 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}
     
     print(timestamp)
-    trial_stop
   }
     
     return(res_list)
