@@ -21,37 +21,39 @@ cohorts_start_applic_to_TRD <- list("pill"=3, "IV"=2, "nasal"=2)
 cohorts_start_applic_to_PRD <- list("pill"=3, "IV"=2, "nasal"=2)
 
 # names must be given as paste0(way_of_administration, "_Control") or paste0(way_of_administration, "_Treatment")
-treatment_effects <- list("TRD"=list("pill_Control"=list(list("mean"=c(32, 20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
-                                     "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                           list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                           list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                           probs=c(0.3,0.4,0.3)),
-                                     "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
-                                     "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                         list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                         list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                         probs=c(0.3,0.4,0.3)),
-                                     "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
-                                     "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                            list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                            list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                            probs=c(0.3,0.4,0.3))),
-                          
-                          "PRD"=list("pill_Control"=list(list("mean"=c(15, 10),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
-                                     "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                           list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                           list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                           probs=c(0.3,0.4,0.3)),
-                                     "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
-                                     "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                         list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                         list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                         probs=c(0.3,0.4,0.3)),
-                                     "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
-                                     "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                            list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                            list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                                            probs=c(0.3,0.4,0.3))))
+treatment_effects <- list(
+  "TRD"=list("pill_Control"=list(list("mean"=c(32, 20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
+             "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   probs=c(0.3,0.4,0.3)),
+             "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
+             "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 probs=c(0.3,0.4,0.3)),
+             "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
+             "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    probs=c(0.3,0.4,0.3))),
+  
+  "PRD"=list("pill_Control"=list(list("mean"=c(32, 20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
+             "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   probs=c(0.3,0.4,0.3)),
+             "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
+             "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 probs=c(0.3,0.4,0.3)),
+             "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
+             "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    probs=c(0.3,0.4,0.3)))
+  )
 
 
 
@@ -63,17 +65,27 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 100
+nsim <- 10000
 
 sim_results <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
-  single_sim_results <- simulate_trial(cohorts_start=cohorts_start, n_int=list("TRD"=50,"PRD"=50), n_fin=list("TRD"=100,"PRD"=100),
-                                      treatment_effects=treatment_effects, ways_of_administration=c("pill", "IV", "nasal"),
-                                      alloc_ratio_administration="fixed", alloc_ratio_control="fixed",
-                                      alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
-                                      cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
-                                      sharing_type="all",
-                                      patients_per_timepoint=c(30,30), cohorts_per_timepoint=c(0.5,0.2,0.2), max_treatments=c(4,3,3), 
-                                      latest_timepoint_treatment_added=60, p_val_interim=0.4, p_val_final=0.1)
+  single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
+                                       n_int=list("TRD"=50,"PRD"=50), 
+                                       n_fin=list("TRD"=100,"PRD"=100),
+                                       treatment_effects=treatment_effects, 
+                                       ways_of_administration=c("pill", "IV", "nasal"),
+                                       alloc_ratio_administration="fixed", 
+                                       alloc_ratio_control="fixed",
+                                       alloc_ratio_administration_values=NULL, 
+                                       alloc_ratio_control_values=0.35,
+                                       cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, 
+                                       cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
+                                       sharing_type="all",
+                                       patients_per_timepoint=c(30,30), 
+                                       cohorts_per_timepoint=c(0.5,0.2,0.2), 
+                                       max_treatments=c(4,3,3), 
+                                       latest_timepoint_treatment_added=60, 
+                                       p_val_interim=0.4, p_val_final=0.1)
+  
   
   ocs <- data.frame(operating_characteristics(single_sim_results) %>% 
                       rownames_to_column("armID") %>% 
@@ -95,7 +107,7 @@ sim_results <- as_tibble(sim_results)
 
 # decisions
 sim_results %>% 
-  filter(decisions_TRD != "ERROR") %>% 
+  filter(treatment_ID != "Control") %>% 
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          cohens_d = factor(round(cohens_d_TRD,2))) %>% 
   group_by(admin, cohens_d, decisions_TRD, .drop=FALSE) %>% summarise(n=n()) %>%
@@ -112,12 +124,29 @@ sim_results %>%
 
 
 # sample size with boxplots
-
+sim_results %>% 
+  filter(treatment_ID=="Control") %>% select(admin, n_TRD, n_PRD) %>%
+  pivot_longer(., cols=starts_with("n_"), names_to="pop", names_prefix="_n", values_to="n") %>%
+  ggplot(.) + geom_boxplot(aes(x=admin, y=n, fill=admin)) +
+  facet_wrap(~pop, nrow=1) +
+  theme_bw()
 
 # boxplot for estimation of Cohen's d
+sim_results %>% 
+  filter(treatment_ID != "Control") %>% 
+  mutate(cohens_d_bias = cohens_d_TRD - cohens_d_TRD_est,
+         cohens_d = factor(round(cohens_d_TRD,2))) %>%
+  ggplot(.) + geom_boxplot(aes(x=admin, y=cohens_d_bias, fill=admin)) +
+  facet_wrap(~cohens_d, nrow=1) +
+  theme_bw() + ylab("Bias of Cohen's d")
 
+  
 
 # duration
+# priority: duration per arm
 
 
 # number of treatment arms per admin
+
+
+
