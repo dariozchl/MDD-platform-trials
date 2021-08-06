@@ -129,14 +129,14 @@ sim_results %>% filter(patients_per_timepoint==30) %>% # need to choose specific
   ggplot(., aes(admin, percentage, color=decisions_TRD)) + geom_point(size=2, alpha = 1, position=position_dodge(width=0.5)) +
   scale_y_continuous(limits=c(0,100), breaks = seq(0,100,by=20), minor_breaks = seq(0,100,by=10)) + 
   xlab("Way of administration") + 
-  # scale_x_discrete(labels=newlabels, limits=positions, position=c("bottom")) + 
-  scale_color_viridis_d(begin = 0.1, end = 0.9) +
+  scale_color_viridis_d(begin = 0.1, end = 0.9, name="Decision") +
   ylab("Percentage") + #ggtitle(title) +
+  geom_hline(data = data.frame(y = c(5, 80, 80), cohens_d = as.factor(c(0,0.22,0.35))), aes(yintercept=y), linetype="dotted") +
   #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
   facet_grid(N ~ cohens_d, labeller = scenario_labeller) +
-  theme_bw() + ggtitle("Recruitment rate of 30 patients per month per population")
+  theme_bw() + ggtitle("Percentage of each decision for various true effect sizes and under different sample sizes")
 
-ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=3)
+ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=6)
 
 
 ##################################################################
