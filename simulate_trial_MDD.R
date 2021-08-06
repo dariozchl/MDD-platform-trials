@@ -1,4 +1,4 @@
-# this is the main function
+# this is the main function to simulate everything
 
 library(mvtnorm)
 
