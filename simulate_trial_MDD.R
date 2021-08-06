@@ -81,7 +81,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     TOTAL_N <- total_n(res_list)
     
-    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim)
+    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, n_fin=n_fin, n_int=n_int)
     
     if(all(colSums(coh_left_check(res_list)) == 3)){trial_stop=TRUE}
     if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}

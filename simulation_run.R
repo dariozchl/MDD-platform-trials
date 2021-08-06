@@ -66,52 +66,66 @@ registerDoParallel(cl)
 # setting seed ?
 
 nsim <- 10000
+sim_results <- NULL
 
-sim_results <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
-  single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
-                                       n_int=list("TRD"=50,"PRD"=50), 
-                                       n_fin=list("TRD"=100,"PRD"=100),
-                                       treatment_effects=treatment_effects, 
-                                       ways_of_administration=c("pill", "IV", "nasal"),
-                                       alloc_ratio_administration="fixed", 
-                                       alloc_ratio_control="fixed",
-                                       alloc_ratio_administration_values=NULL, 
-                                       alloc_ratio_control_values=0.35,
-                                       cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, 
-                                       cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
-                                       sharing_type="all",
-                                       patients_per_timepoint=c(30,30), 
-                                       cohorts_per_timepoint=c(0.5,0.2,0.2), 
-                                       max_treatments=c(4,3,3), 
-                                       latest_timepoint_treatment_added=60, 
-                                       p_val_interim=0.4, p_val_final=0.1)
-  
-  
-  ocs <- data.frame(operating_characteristics(single_sim_results) %>% 
-                      rownames_to_column("armID") %>% 
-                      mutate(admin = gsub("_.*", "", armID), 
-                             treatment_ID = case_when(grepl("Control", armID) ~ "Control", TRUE ~ gsub(".*_Treatment", "", armID))) %>% 
-                      relocate(admin, treatment_ID, .before=armID) %>% select(-armID),
-                    "nsim"=nsim)
-  
-  return(ocs)
+patients_per_timepoint = list(c(30,30), c(20,20))
+n_fin <- list(list("TRD"=100,"PRD"=100), list("TRD"=80,"PRD"=80))
+scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, "n_fin"=n_fin)
+
+
+for(i in 1:nrow(scenarios)){
+  sim_results_tmp <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
+    single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
+                                         n_int=lapply(scenarios$n_fin[[i]], function(x) x/2), 
+                                         n_fin=scenarios$n_fin[[i]],
+                                         treatment_effects=treatment_effects, 
+                                         ways_of_administration=c("pill", "IV", "nasal"),
+                                         alloc_ratio_administration="fixed", 
+                                         alloc_ratio_control="fixed",
+                                         alloc_ratio_administration_values=NULL, 
+                                         alloc_ratio_control_values=0.35,
+                                         cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, 
+                                         cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
+                                         sharing_type="concurrent",
+                                         patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
+                                         cohorts_per_timepoint=c(0.5,0.2,0.2), 
+                                         max_treatments=c(4,3,3), 
+                                         latest_timepoint_treatment_added=60, 
+                                         p_val_interim=0.4, p_val_final=0.05)
+    
+    
+    ocs <- data.frame(operating_characteristics(single_sim_results) %>% 
+                        rownames_to_column("armID") %>% 
+                        mutate(admin = gsub("_.*", "", armID), 
+                               treatment_ID = case_when(grepl("Control", armID) ~ "Control", TRUE ~ gsub(".*_Treatment", "", armID))) %>% 
+                        relocate(admin, treatment_ID, .before=armID) %>% select(-armID),
+                      "nsim"=nsim)
+    
+    return(ocs)
+  }
+  sim_results <- rbind(sim_results, sim_results_tmp %>% add_column("scenarioID"=i))
+  print(paste0(nsim, " Simulations took ", round(difftime(Sys.time(), start.time, units="min"), 2), " minutes"))
 }
-#stop cluster
 stopCluster(cl)
-print(paste0(nsim, " Simulations took ", round(difftime(Sys.time(), start.time, units="min"), 2), " minutes"))
-
 sim_results <- as_tibble(sim_results)
 
 
+sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% 1:2 ~ 100, TRUE ~ 80),
+                                      patients_per_timepoint = case_when(scenarioID %in% c(1,3) ~ 30, TRUE ~ 20))
 
-
+##################################################################
+scenario_labeller <- labeller(
+  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35"),
+  `N` = c(`80` = "N = 80", `100` = "N = 100"),
+  .default = label_both
+)
 # decisions
-sim_results %>% 
+sim_results %>% filter(patients_per_timepoint==30) %>% # need to choose specific scenario IDs due to mistage with final and interim sample sizes
   filter(treatment_ID != "Control") %>% 
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          cohens_d = factor(round(cohens_d_TRD,2))) %>% 
-  group_by(admin, cohens_d, decisions_TRD, .drop=FALSE) %>% summarise(n=n()) %>%
-  group_by(admin, cohens_d) %>% mutate(percentage = 100 * n / sum(n)) %>% 
+  group_by(admin, cohens_d, decisions_TRD, N, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(admin, cohens_d, N) %>% mutate(percentage = 100 * n / sum(n)) %>% 
   ggplot(., aes(admin, percentage, color=decisions_TRD)) + geom_point(size=2, alpha = 1, position=position_dodge(width=0.5)) +
   scale_y_continuous(limits=c(0,100), breaks = seq(0,100,by=20), minor_breaks = seq(0,100,by=10)) + 
   xlab("Way of administration") + 
@@ -119,28 +133,52 @@ sim_results %>%
   scale_color_viridis_d(begin = 0.1, end = 0.9) +
   ylab("Percentage") + #ggtitle(title) +
   #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
-  facet_grid(~ cohens_d) +
-  theme_bw()
+  facet_grid(N ~ cohens_d, labeller = scenario_labeller) +
+  theme_bw() + ggtitle("Recruitment rate of 30 patients per month per population")
+
+ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=3)
 
 
-# sample size with boxplots
+##################################################################
+# sample size of control arms
+
+# per population
 sim_results %>% 
   filter(treatment_ID=="Control") %>% select(admin, n_TRD, n_PRD) %>%
   pivot_longer(., cols=starts_with("n_"), names_to="pop", names_prefix="_n", values_to="n") %>%
-  ggplot(.) + geom_boxplot(aes(x=admin, y=n, fill=admin)) +
+  ggplot(.) + geom_violin(aes(x=admin, y=n, fill=admin)) +
   facet_wrap(~pop, nrow=1) +
   theme_bw()
+ggsave("sample_size_control_population.tiff", device = "tiff", width=9, height=3)
 
-# boxplot for estimation of Cohen's d
+# per recruitment rate
+scenario_labeller <- labeller(
+  `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
+  .default = label_both
+)
 sim_results %>% 
-  filter(treatment_ID != "Control") %>% 
-  mutate(cohens_d_bias = cohens_d_TRD - cohens_d_TRD_est,
-         cohens_d = factor(round(cohens_d_TRD,2))) %>%
-  ggplot(.) + geom_boxplot(aes(x=admin, y=cohens_d_bias, fill=admin)) +
-  facet_wrap(~cohens_d, nrow=1) +
-  theme_bw() + ylab("Bias of Cohen's d")
+  filter(treatment_ID=="Control") %>% 
+  ggplot(.) + geom_violin(aes(x=admin, y=n_TRD, fill=admin)) +
+  facet_wrap(~patients_per_timepoint, nrow=1, labeller=scenario_labeller) +
+  theme_bw()
+ggsave("sample_size_control_per_recruitment.tiff", device = "tiff", width=7, height=3)
 
-  
+
+##################################################################
+# estimation of Cohen's d
+scenario_labeller <- labeller(
+  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35"),
+  .default = label_both
+)
+sim_results %>% filter(patients_per_timepoint==30) %>%
+  filter(treatment_ID != "Control") %>% 
+  mutate(cohens_d = factor(round(cohens_d_TRD,2))) %>%
+  ggplot(.) + geom_violin(aes(x=admin, y=cohens_d_TRD_est, fill=admin)) +
+  geom_hline(data = data.frame(y = c(0, 0.22, 0.35), cohens_d = as.factor(c(0,0.22,0.35))), aes(yintercept=y), linetype="dotted") +
+  facet_wrap(~cohens_d, nrow=1, labeller = scenario_labeller) +
+  theme_bw() + ylab("Estimated Cohen's d") + ggtitle("Estimated Cohen's d")
+ggsave("estimated_cohens_d.tiff", device = "tiff", width=9, height=3)
+
 
 # duration
 # priority: duration per arm
