@@ -62,6 +62,8 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
       all_alloc_ratios <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$alloc_ratio))
       all_prob_admins <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$prob_admin))
       
+      # sample from multinomial distribution with size of available patients how many patients are allocated to each treatment arm
+      # with probability derived from the allocation rations within and between each way of administration
       if(sum(all_alloc_ratios * all_prob_admins) > 0){ n_all_arms <- rmultinom(n=1, size=n[population], prob=all_alloc_ratios * all_prob_admins) } else {n_all_arms <- 0}
       
       for (i in row.names(n_all_arms)) {
