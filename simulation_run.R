@@ -26,36 +26,40 @@ treatment_effects <- list(
              "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                   probs=c(0.3,0.4,0.3)),
+                                   list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   probs=c(0.25,0.25,0.25,0.25)),
              "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                 probs=c(0.3,0.4,0.3)),
+                                 list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 probs=c(0.25,0.25,0.25,0.25)),
              "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
              "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                    probs=c(0.3,0.4,0.3))),
+                                    list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    probs=c(0.25,0.25,0.25,0.25))),
   
   "PRD"=list("pill_Control"=list(list("mean"=c(32, 20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                   probs=c(0.3,0.4,0.3)),
+                                   list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   probs=c(0.25,0.25,0.25,0.25)),
              "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                 probs=c(0.3,0.4,0.3)),
+                                 list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 probs=c(0.25,0.25,0.25,0.25)),
              "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
              "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                    probs=c(0.3,0.4,0.3)))
+                                    list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    probs=c(0.25,0.25,0.25,0.25)))
   )
-
-
 
 
 start.time <- Sys.time()
@@ -65,7 +69,7 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 10000
+nsim <- 1000
 sim_results <- NULL
 
 patients_per_timepoint = list(c(30,30), c(20,20))
@@ -90,7 +94,8 @@ for(i in 1:nrow(scenarios)){
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          cohorts_per_timepoint=c(0.5,0.2,0.2), 
                                          max_treatments=c(4,3,3), 
-                                         latest_timepoint_treatment_added=60, 
+                                         #trial_end="timepoint", latest_timepoint_treatment_added=60,
+                                         trial_end="pipeline", pipeline_size=c(10,4,4),
                                          p_val_interim=0.4, p_val_final=0.05)
     
     
@@ -109,18 +114,19 @@ for(i in 1:nrow(scenarios)){
 stopCluster(cl)
 sim_results <- as_tibble(sim_results)
 
+saveRDS(sim_results, "sim_results.rds")
+sim_results <- readRDS("sim_results.rds")
 
 sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% 1:2 ~ 100, TRUE ~ 80),
                                       patients_per_timepoint = case_when(scenarioID %in% c(1,3) ~ 30, TRUE ~ 20))
 
 ##################################################################
 scenario_labeller <- labeller(
-  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35"),
-  `N` = c(`80` = "N = 80", `100` = "N = 100"),
-  .default = label_both
+  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
+  `N` = c(`80` = "N = 80", `100` = "N = 100")
 )
 # decisions
-sim_results %>% filter(patients_per_timepoint==30) %>% # need to choose specific scenario IDs due to mistage with final and interim sample sizes
+sim_results %>% filter(patients_per_timepoint==30) %>% 
   filter(treatment_ID != "Control") %>% 
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          cohens_d = factor(round(cohens_d_TRD,2))) %>% 
@@ -131,12 +137,12 @@ sim_results %>% filter(patients_per_timepoint==30) %>% # need to choose specific
   xlab("Way of administration") + 
   scale_color_viridis_d(begin = 0.1, end = 0.9, name="Decision") +
   ylab("Percentage") + #ggtitle(title) +
-  geom_hline(data = data.frame(y = c(5, 80, 80), cohens_d = as.factor(c(0,0.22,0.35))), aes(yintercept=y), linetype="dotted") +
+  geom_hline(data = data.frame(y = c(5, 80, 80, 80), cohens_d = as.factor(c(0,0.22,0.35,0.5))), aes(yintercept=y), linetype="dotted") +
   #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
   facet_grid(N ~ cohens_d, labeller = scenario_labeller) +
   theme_bw() + ggtitle("Percentage of each decision for various true effect sizes and under different sample sizes")
 
-ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=6)
+ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=4)
 
 
 ##################################################################
@@ -153,9 +159,8 @@ ggsave("sample_size_control_population.tiff", device = "tiff", width=9, height=3
 
 # per recruitment rate
 scenario_labeller <- labeller(
-  `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-  .default = label_both
-)
+  `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients")
+  )
 sim_results %>% 
   filter(treatment_ID=="Control") %>% 
   ggplot(.) + geom_violin(aes(x=admin, y=n_TRD, fill=admin)) +
@@ -167,14 +172,13 @@ ggsave("sample_size_control_per_recruitment.tiff", device = "tiff", width=7, hei
 ##################################################################
 # estimation of Cohen's d
 scenario_labeller <- labeller(
-  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35"),
-  .default = label_both
-)
+  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50")
+  )
 sim_results %>% filter(patients_per_timepoint==30) %>%
   filter(treatment_ID != "Control") %>% 
   mutate(cohens_d = factor(round(cohens_d_TRD,2))) %>%
   ggplot(.) + geom_violin(aes(x=admin, y=cohens_d_TRD_est, fill=admin)) +
-  geom_hline(data = data.frame(y = c(0, 0.22, 0.35), cohens_d = as.factor(c(0,0.22,0.35))), aes(yintercept=y), linetype="dotted") +
+  geom_hline(data = data.frame(y = c(0, 0.22, 0.35, 0.5), cohens_d = as.factor(c(0,0.22,0.35, 0.5))), aes(yintercept=y), linetype="dotted") +
   facet_wrap(~cohens_d, nrow=1, labeller = scenario_labeller) +
   theme_bw() + ylab("Estimated Cohen's d") + ggtitle("Estimated Cohen's d")
 ggsave("estimated_cohens_d.tiff", device = "tiff", width=9, height=3)

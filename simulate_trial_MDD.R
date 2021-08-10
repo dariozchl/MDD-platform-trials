@@ -7,7 +7,9 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
                            alloc_ratio_administration="fixed", alloc_ratio_control="fixed",
                            alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type="all",
-                           patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_treatments, latest_timepoint_treatment_added,
+                           patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_treatments, 
+                           trial_end = "pipeline", # can be either "pipeline" or "timepoint"
+                           pipeline_size = c(10,4,4), latest_timepoint_treatment_added = 60,
                            p_val_interim, p_val_final) {
 
   ##### Initialization #####
@@ -41,10 +43,20 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     for(i in 1:length(ways_of_administration)){
       current_treatments <- sum(rowSums(cohorts_left[grep(ways_of_administration[i], row.names(cohorts_left)),]) >= 1) - 1 # counts how many treatments per admin are active either in PRD or in TRD. One cohort_left is always control, so -1
-      if(add_new_cohort[i] == 1 & (current_treatments < max_treatments[i]) & timestamp<latest_timepoint_treatment_added){ 
-        res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
-                                      treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
-                                      applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+      if(trial_end == "pipeline"){
+        treatments_in_platform <- length(grep(ways_of_administration[i], row.names(cohorts_left))) - 1 # counts how many treatments have already been included per admin in the platform in PRD or in TRD. One cohort_left is always control, so -1
+        if((add_new_cohort[i] == 1) & (current_treatments < max_treatments[i]) & (treatments_in_platform<pipeline_size[i])){ 
+          res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
+                                        treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
+                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+        }
+      }
+      if(trial_end == "timepoint"){
+        if((add_new_cohort[i] == 1) & (current_treatments < max_treatments[i]) & (timestamp<latest_timepoint_treatment_added)){ 
+          res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
+                                        treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
+                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+        }
       }
     }
     
