@@ -48,14 +48,14 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
         if((add_new_cohort[i] == 1) & (current_treatments < max_treatments[i]) & (treatments_in_platform<pipeline_size[i])){ 
           res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
                                         treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
-                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE, timestamp=timestamp)
         }
       }
       if(trial_end == "timepoint"){
         if((add_new_cohort[i] == 1) & (current_treatments < max_treatments[i]) & (timestamp<latest_timepoint_treatment_added)){ 
           res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
                                         treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
-                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE)
+                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE, timestamp=timestamp)
         }
       }
     }
@@ -95,7 +95,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     TOTAL_N <- total_n(res_list)
     
-    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, n_fin=n_fin, n_int=n_int)
+    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, n_fin=n_fin, n_int=n_int, timestamp=timestamp)
     
     if(all(colSums(coh_left_check(res_list)) == 3)){trial_stop=TRUE}
     if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}

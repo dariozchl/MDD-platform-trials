@@ -1,13 +1,13 @@
 
 #' Helper Function: Create new cohort and update allocation ratio
 #' @export
-create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_effects, way_of_administration, applicable_to_TRD=TRUE, applicable_to_PRD=TRUE) {
+create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_effects, way_of_administration, applicable_to_TRD=TRUE, applicable_to_PRD=TRUE, timestamp=timestamp) {
 
 
   name_placeholder <- paste0(way_of_administration,"_Treatment") # required for randomly drawing response
 
   if(applicable_to_TRD & applicable_to_PRD){
-    new_list <- list(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n =  total_n(res_list$TRD),
+    new_list <- list(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_timestamp = timestamp,
                           response = treatment_effects$TRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]],
                           data = NULL,
                           n = rep(NA, length(res_list$TRD[[paste0(way_of_administration, "_Control")]]$n))))
@@ -20,7 +20,7 @@ create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_ef
     names(res_list$TRD)[length(res_list$TRD)] <- new_name
     
     ### repeat the same for PRD
-    new_list <- list(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_n =  total_n(res_list$PRD),
+    new_list <- list(list(decision = rep("none", 2), alloc_ratio = NULL, n_thresh = NULL, start_timestamp = timestamp,
                           response = treatment_effects$PRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]],
                           data = NULL,
                           n = rep(NA, length(res_list$PRD[[paste0(way_of_administration, "_Control")]]$n))))
