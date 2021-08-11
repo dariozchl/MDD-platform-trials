@@ -11,7 +11,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
                                 hdi_perc = NULL, p_val = NULL) {
   
 
-  #which control-cohort needed
+  # which control-cohort needed
   control_needed <- which(names(results[[which_pop]]) == paste0(which_admin,"_Control",sep=""))
   
   
@@ -39,7 +39,8 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   response_data <- data.frame(diff = c(diff_after_treat, diff_after_cont),
                               arm = factor(c(rep(1,length(diff_after_treat)),
                                              rep(0,length(diff_after_cont)))))
-   ########## Bayesian Two-Arm Superiority Criteria ###############
+   
+  ########## Bayesian Two-Arm Superiority Criteria ###############
   
   if(test_type %in% c("bayes","both")){
   
@@ -61,7 +62,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
                       decision = ifelse(cont0_bayes == TRUE, "failure", 
                                         "success"))
 }
-  # ########## P-Value Superiority Criteria ##########
+  ########### P-Value Superiority Criteria ##########
   
   if(test_type %in% c("freq","both")){ 
   
