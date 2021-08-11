@@ -70,7 +70,7 @@ operating_characteristics <- function(res_list){
   duration_each_arm <- last_timestamp - first_timestamp
   names(duration_each_arm) <- c("duration_TRD", "duration_PRD")
   
-  ocs <- merge(ocs, duration_each_arm, by="row.names")
+  ocs <- merge(ocs, cbind(duration_each_arm, first_timestamp_TRD, last_timestamp_TRD, first_timestamp_PRD, last_timestamp_PRD), by="row.names")
   rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
   ocs <- ocs[2:length(ocs)]
   
