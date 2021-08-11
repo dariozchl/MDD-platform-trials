@@ -2,6 +2,8 @@
 
 library(doParallel)
 library(tidyverse)
+library(ggpubr)
+library(viridis)
 
 source("create_cohort_initial.R")
 source("coh_left_check.R")
@@ -92,10 +94,10 @@ for(i in 1:nrow(scenarios)){
                                          cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
-                                         cohorts_per_timepoint=c(0.5,0.2,0.2), 
+                                         cohorts_per_timepoint=c(0.1,0.05,0.05), 
                                          max_treatments=c(4,3,3), 
-                                         #trial_end="timepoint", latest_timepoint_treatment_added=60,
-                                         trial_end="pipeline", pipeline_size=c(10,4,4),
+                                         trial_end="timepoint", latest_timepoint_treatment_added=60,
+                                         #trial_end="pipeline", pipeline_size=c(10,4,4),
                                          p_val_interim=0.4, p_val_final=0.05)
     
     
@@ -120,7 +122,14 @@ sim_results <- readRDS("sim_results.rds")
 sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% 1:2 ~ 100, TRUE ~ 80),
                                       patients_per_timepoint = case_when(scenarioID %in% c(1,3) ~ 30, TRUE ~ 20))
 
+
 ##################################################################
+
+
+
+
+##################################################################
+### decisions
 scenario_labeller <- labeller(
   `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
   `N` = c(`80` = "N = 80", `100` = "N = 100")
@@ -146,7 +155,50 @@ ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=4)
 
 
 ##################################################################
-# sample size of control arms
+### sample sizes 
+### aggregated sample sizes 
+
+# total number of patients per admin
+N_per_admin <- sim_results %>% group_by(nsim, patients_per_timepoint, N, admin) %>% summarise(n_TRD = sum(n_TRD), n_PRD = sum(n_PRD))
+
+N_per_admin %>% 
+  pivot_longer(., cols=starts_with("n_"), names_to="pop", names_prefix="n_", values_to="n") %>%
+  filter(pop=="TRD") %>%
+  ggplot(.) + geom_violin(aes(x=admin, y=n, fill=admin)) +
+  facet_grid(N~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
+    `N` = c(`80`="N = 80", `100`="N = 100")
+  )) +
+  theme_bw() + ggtitle("Total number of patients per domain") + ylab("") + xlab("Domain") + theme(legend.position="none")
+ggsave("N_per_domain.tiff", device = "tiff", width=9, height=4)
+
+# total number of patients per population
+N_per_pop <- sim_results %>% group_by(nsim, patients_per_timepoint, N) %>% summarise(n_TRD = sum(n_TRD), n_PRD = sum(n_PRD))
+N_per_pop %>% 
+  pivot_longer(., cols=starts_with("n_"), names_to="pop", names_prefix="n_", values_to="n") %>%
+  ggplot(.) + geom_violin(aes(x=as.factor(pop), y=n, fill=pop)) +
+  facet_grid(N~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
+    `N` = c(`80`="N = 80", `100`="N = 100")
+  )) +
+  theme_bw() + ggtitle("Total number of patients per population") + ylab("") + xlab("") + theme(legend.position="none")
+ggsave("N_per_pop.tiff", device = "tiff", width=9, height=4)
+
+
+# total number of patients in platform
+N_per_platform <- sim_results %>% group_by(nsim, patients_per_timepoint, N) %>% summarise(n_total = sum(n_TRD+n_PRD))
+
+N_per_platform %>% 
+  ggplot(.) + geom_violin(aes(x="", y=n_total), fill="grey") +
+  facet_grid(N~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
+    `N` = c(`80`="N = 80", `100`="N = 100")
+  )) +
+  theme_bw() + ggtitle("Total number of patients per platform") + ylab("") + xlab("") + theme(legend.position="none")
+ggsave("N_per_platform.tiff", device = "tiff", width=9, height=4)
+
+
+### sample size of control arms
 
 # per population
 sim_results %>% 
@@ -167,6 +219,30 @@ sim_results %>%
   facet_wrap(~patients_per_timepoint, nrow=1, labeller=scenario_labeller) +
   theme_bw()
 ggsave("sample_size_control_per_recruitment.tiff", device = "tiff", width=7, height=3)
+
+##################################################################
+### number of arms
+
+# number of arms per admin
+number_of_arms_per_admin <- sim_results %>% group_by(nsim, patients_per_timepoint, N, admin) %>% count()
+
+number_of_arms_per_admin %>% group_by(patients_per_timepoint, N, admin, "n"=as.factor(n), .drop=F) %>% 
+  summarise(counts=n()) %>%
+  mutate(counts=counts/max(sim_results$nsim)*100) %>%
+  ggplot(.) + 
+  geom_bar(aes(x=as.factor(n), y=counts, fill=admin), stat="identity", position = "dodge", width=0.7) + 
+  facet_grid(N~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
+    `N` = c(`80`="N = 80", `100`="N = 100")
+  )) + coord_flip() +
+  theme_bw() + ggtitle(paste0("Number of tested compounds per platform")) + ylab("") + xlab("Number of compounds") + 
+  scale_fill_viridis_d(end=0.9, name="Domain")
+ggsave("treatments_per_admin.tiff", device = "tiff", width=9, height=4)
+
+
+# number of arms in platform (do not count TRD and PRD separately)
+number_of_arms_per_platform <- sim_results %>% group_by(nsim, scenarioID) %>% count()
+
 
 
 ##################################################################

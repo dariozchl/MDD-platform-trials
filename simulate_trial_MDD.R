@@ -59,7 +59,12 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
         }
       }
     }
-    
+ 
+    # some arms may be added.
+    # check again which cohorts are recruiting.
+    cohorts_left <- coh_left_check(x=res_list)   
+    # update again allocation ratio
+    res_list <- update_alloc_ratio(res_list)
     
     
     # sample size to be allocated to routes of administration
