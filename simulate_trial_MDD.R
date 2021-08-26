@@ -10,7 +10,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
                            patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_treatments, 
                            trial_end = "pipeline", # can be either "pipeline" or "timepoint"
                            pipeline_size = c(10,4,4), latest_timepoint_treatment_added = 60,
-                           p_val_interim, p_val_final) {
+                           p_val_interim, p_val_final, sided) {
 
   ##### Initialization #####
 
@@ -100,7 +100,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     TOTAL_N <- total_n(res_list)
     
-    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, n_fin=n_fin, n_int=n_int, timestamp=timestamp)
+    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, sided=sided, n_fin=n_fin, n_int=n_int, timestamp=timestamp)
     
     if(all(colSums(coh_left_check(res_list)) == 3)){trial_stop=TRUE}
     if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}

@@ -1,5 +1,5 @@
 # This is a function to run the simulations
-
+library(tidyverse)
 library(doParallel)
 
 
@@ -69,7 +69,7 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 10000
+nsim <- 100
 sim_results <- NULL
 
 patients_per_timepoint = list(c(30,30), c(20,20))
@@ -96,7 +96,7 @@ for(i in 1:nrow(scenarios)){
                                          max_treatments=c(4,3,3), 
                                          trial_end="timepoint", latest_timepoint_treatment_added=60,
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
-                                         p_val_interim=scenarios$pvals[[i]][1], p_val_final=scenarios$pvals[[i]][2])
+                                         p_val_interim=scenarios$pvals[[i]][1], p_val_final=scenarios$pvals[[i]][2], sided="one_sided")
     
     
     ocs <- data.frame(operating_characteristics(single_sim_results) %>% 
@@ -116,7 +116,7 @@ sim_results <- as_tibble(sim_results)
 
 # add specific information about the scenarios
 # CAUTION: this needs to be adjusted when simulation scenarios are altered
-sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% c(1,2,5,6) ~ 100, TRUE ~ 80),
+sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% c(1,2,5,6) ~ 100, TRUE ~ 80), N = as.factor(N),
                                       patients_per_timepoint = case_when(scenarioID %in% c(1,3,5,7) ~ 30, TRUE ~ 20),
                                       pvalues = case_when(scenarioID %in% 1:4 ~ "0.4,0.05", TRUE ~ "0.5,0.1"))
 

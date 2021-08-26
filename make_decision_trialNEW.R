@@ -8,7 +8,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
                                 test_type = c("freq","bayes","both"), 
                                 interim = FALSE,
                                 control_type = c("all", "concurrent"),
-                                hdi_perc = NULL, p_val = NULL) {
+                                hdi_perc = NULL, p_val = NULL, sided="two_sided") {
   
 
   #which control-cohort needed
@@ -58,8 +58,7 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
   res_bayesLM <- list(mean_effect = mean(posteriors$arm1),
                       median_effect = median(posteriors$arm1),
                       HighestDensityInterval = hd_int,
-                      decision = ifelse(cont0_bayes == TRUE, "failure", 
-                                        "success"))
+                      decision = ifelse(cont0_bayes == TRUE, "failure", "success"))
 }
   # ########## P-Value Superiority Criteria ##########
   
@@ -72,14 +71,32 @@ make_decision_trial <- function(results, which_pop=c("TRD","PRD"),
     }
     
   model_freq <- lm(diff~arm, data=response_data)
-  conf_int <- unname(confint(model_freq, level = 1-p_valUSE)[2,])
-  cont0_freq <- conf_int[1] <= 0 
+  
+  if(sided=="one_sided"){
+    # if estimate <0, then the treatment arm has a favorable effect
+    # in that case, for one-sided p-value, divide two-sided p-value provided by lm by 2
+    one_sided_pvalue <- ifelse(summary(model_freq)$coefficients[2,1] > 0, summary(model_freq)$coefficients[2,4]/2, 1-summary(model_freq)$coefficients[2,4]/2)
+    # two-sided confidence interval on level of the significance level at final analysis: one-sided alpha of 5% corresponds to two-sided 1-2*alpha, i.e. 90% CI 
+    conf_int <- unname(confint(model_freq, level = 1-2*p_val[2])[2,])
+    # check whether the p-value is below threshold
+    success_pval <- one_sided_pvalue < p_valUSE
+  } else if(sided=="two_sided") {
+    conf_int <- unname(confint(model_freq, level = 1-p_val[2])[2,])
+    success_pval <- (summary(model_freq)$coefficients[2,1] > 0) & (summary(model_freq)$coefficients[2,4] < p_valUSE)
+  }
+
+      
+  ###  
   #alternative way to specify the effect size: use standardized regression coefficient
   #cohensD <- unname(lm(scale(diff) ~ scale(as.numeric(arm)), data=response_data)$coefficients[2])
-  
+  ###
+    
   res_freqLM <- list(mean_effect = unname(model_freq$coefficients[2]),
-                      ConfidenceInterval = conf_int,
-                      decision = ifelse(cont0_freq == TRUE, ifelse(interim ==TRUE,"stopped early","failure"), "success"))
+                     ConfidenceInterval = conf_int,
+                     decision = ifelse(interim==TRUE, 
+                                       ifelse(success_pval==FALSE, "stopped early", "continue"), 
+                                       ifelse(success_pval==FALSE, "failure", "success")),
+                     n_tested = nrow(response_data))
    
   }  
 if(test_type == "both"){
