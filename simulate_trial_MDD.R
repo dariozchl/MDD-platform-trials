@@ -4,9 +4,7 @@ library(mvtnorm)
 
 simulate_trial <- function(cohorts_start, n_int, n_fin,
                            treatment_effects, ways_of_administration,
-                           alloc_ratio_administration="fixed", alloc_ratio_control="fixed",
-                           alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
-                           cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type="all",
+                           cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type,
                            patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_treatments, 
                            trial_end = "pipeline", # can be either "pipeline" or "timepoint"
                            pipeline_size = c(10,4,4), latest_timepoint_treatment_added = 60,
@@ -20,8 +18,6 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
   # Initialize res_list
   res_list <- create_cohort_initial(cohorts_start=cohorts_start, n_int=n_int, n_fin=n_fin,
                                     treatment_effects=treatment_effects, ways_of_administration=ways_of_administration,
-                                    alloc_ratio_administration=alloc_ratio_administration, alloc_ratio_control=alloc_ratio_control,
-                                    alloc_ratio_administration_values=alloc_ratio_administration_values, alloc_ratio_control_values=alloc_ratio_control_values,
                                     cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD)
 
   Total_N_Vector <- NULL
@@ -75,7 +71,7 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     # Get new patients and responders for each cohort
     for(population in 1:2){
       
-      
+      # get vectors with allocation ratios within domain and allocation ratios for each domain
       all_alloc_ratios <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$alloc_ratio))
       all_prob_admins <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$prob_admin))
       
