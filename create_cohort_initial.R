@@ -2,12 +2,8 @@
 #' Helper Function: Create new cohort initially
 #' @export
 create_cohort_initial <- function(cohorts_start, n_int, n_fin, treatment_effects, ways_of_administration=c("pill", "IV", "nasal"),
-                                  alloc_ratio_administration="fixed", alloc_ratio_control="fixed",
-                                  alloc_ratio_administration_values=NULL, alloc_ratio_control_values=0.35,
-                                  cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type="all") {
+                                  cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD) {
 
-  alloc_ratio_control_values <<- alloc_ratio_control_values # global for further use in nested functions
-  sharing_type <<- sharing_type # global for further use in nested functions
   ways_of_administration <<- ways_of_administration
 
   cohorts_start_TRD <- list(); cohorts_start_PRD <- list(); cohorts_per_administration_TRD <- list(); cohorts_per_administration_PRD <- list()
@@ -49,9 +45,6 @@ create_cohort_initial <- function(cohorts_start, n_int, n_fin, treatment_effects
     }
     res_list$PRD[[i]]$response <- treatment_effects$PRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]]
   }
-
-  # Update allocation ratio
-  #res_list <- update_alloc_ratio(res_list)
 
   return(res_list)
 

@@ -163,6 +163,25 @@ ggsave("sample_size_control_population.tiff", device = "tiff", width=9, height=3
 ```
 
 
+# Size of control arms used for final analysis
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
+
+sim_results %>% 
+  filter(decisions_TRD %in% c("success","failure")) %>% 
+  ggplot(.) + geom_violin(aes(x=admin, y=n_control_comparators_TRD, fill=admin)) +
+  facet_grid(N~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
+    `N` = c(`80`="N = 80", `100`="N = 100")
+  )) +
+  theme_bw() + ylab("Size of control used in analysis") + xlab("Domain") 
+
+
+ggsave("size_control_final_analysis.tiff", device = "tiff", width=9, height=3)
+
+```
+
+
 
 # Number of arms
 

@@ -8,7 +8,7 @@ update_alloc_ratio <- function(res_list) {
     active_admin <- unique(gsub(pattern="_.*", "", (rownames(cohorts_left))[(cohorts_left[,population])])) 
     number_of_active_admin <- length(active_admin)
     
-    # all arms in inactive admins should have prob_admin = 0
+    # all arms in inactive admins should have alloc_ratio=0 and prob_admin=0
     inactive_admins <- unique(gsub(pattern="_.*", "", (rownames(cohorts_left))[!(cohorts_left[,population])])) 
     for(inactive_admin in inactive_admins){
       inactive_admin_arms <- grep(inactive_admin, ((names(res_list[[population]]))), value=TRUE)
@@ -56,7 +56,3 @@ update_alloc_ratio <- function(res_list) {
 
   return(res_list)
 }
-
-# res_list <- update_alloc_ratio(res_list)
-# View(res_list)
-
