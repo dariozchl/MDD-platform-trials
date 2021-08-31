@@ -5,6 +5,7 @@ library(doParallel)
 
 source("create_cohort_initial.R")
 source("coh_left_check.R")
+source("check_new_compound.R")
 source("total_n.R")
 source("update_alloc_ratio.R")
 source("create_cohort_new.R")
@@ -14,11 +15,11 @@ source("simulate_trial_MDD.R")
 source("operating_characteristics.R")
 
 
-cohorts_start <- list("pill"=3, "IV"=2, "nasal"=2)
+cohorts_start <- list("pill"=3, "IV"=1, "nasal"=1)
 
 # probability of a treatment being applicable to PRD and TRD patients
-cohorts_start_applic_to_TRD <- list("pill"=3, "IV"=2, "nasal"=2)
-cohorts_start_applic_to_PRD <- list("pill"=3, "IV"=2, "nasal"=2)
+cohorts_start_applic_to_TRD <- list("pill"=3, "IV"=1, "nasal"=1)
+cohorts_start_applic_to_PRD <- list("pill"=3, "IV"=1, "nasal"=1)
 
 # names must be given as paste0(way_of_administration, "_Control") or paste0(way_of_administration, "_Treatment")
 treatment_effects <- list(
@@ -88,9 +89,9 @@ for(i in 1:nrow(scenarios)){
                                          cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
-                                         cohorts_per_timepoint=c(0.1,0.05,0.05), 
-                                         max_treatments=c(4,3,3), 
-                                         trial_end="timepoint", latest_timepoint_treatment_added=60,
+                                         prob_new_compound=c(0.1,0.05,0.05), 
+                                         max_treatments=c(10), 
+                                         trial_end="timepoint", latest_timepoint_treatment_added=60, number_of_compounds_cap="global",
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
                                          p_val_interim=scenarios$pvals[[i]][1], p_val_final=scenarios$pvals[[i]][2], sided="one_sided")
     

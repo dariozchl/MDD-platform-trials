@@ -5,8 +5,10 @@ library(mvtnorm)
 simulate_trial <- function(cohorts_start, n_int, n_fin,
                            treatment_effects, ways_of_administration,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type,
-                           patients_per_timepoint=c(30,30), cohorts_per_timepoint, max_treatments, 
+                           patients_per_timepoint=c(30,30), prob_new_compound, 
+                           max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
                            trial_end = "pipeline", # can be either "pipeline" or "timepoint"
+                           number_of_compounds_cap, # can either be "separate" or "global"
                            pipeline_size = c(10,4,4), latest_timepoint_treatment_added = 60,
                            p_val_interim, p_val_final, sided) {
 
@@ -27,39 +29,13 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
   ##### Running Simulations #####
   while (!trial_stop) {
     
-    # Check which cohorts are recruiting
-    cohorts_left <- coh_left_check(x=res_list)
-
+    # check whether new compound is available and if yes, add it to res_list
+    res_list <- check_new_compound(res_list, number_of_compounds_cap, max_treatments)
+    
+    # some arms may have been added, so check again which cohorts are recruiting.
+    cohorts_left <- coh_left_check(x=res_list) 
+    
     # update allocation ratio
-    res_list <- update_alloc_ratio(res_list)
-    
-    
-    # check whether new cohort should be added
-    add_new_cohort <- rbinom(n=3, size=1, prob=cohorts_per_timepoint)
-    
-    for(i in 1:length(ways_of_administration)){
-      current_treatments <- sum(rowSums(cohorts_left[grep(ways_of_administration[i], row.names(cohorts_left)),]) >= 1) - 1 # counts how many treatments per admin are active either in PRD or in TRD. One cohort_left is always control, so -1
-      if(trial_end == "pipeline"){
-        treatments_in_platform <- length(grep(ways_of_administration[i], row.names(cohorts_left))) - 1 # counts how many treatments have already been included per admin in the platform in PRD or in TRD. One cohort_left is always control, so -1
-        if((add_new_cohort[i] == 1) & (current_treatments < max_treatments[i]) & (treatments_in_platform<pipeline_size[i])){ 
-          res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
-                                        treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
-                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE, timestamp=timestamp)
-        }
-      }
-      if(trial_end == "timepoint"){
-        if((add_new_cohort[i] == 1) & (current_treatments < max_treatments[i]) & (timestamp<latest_timepoint_treatment_added)){ 
-          res_list <- create_cohort_new(res_list, n_int=n_int, n_fin=n_fin, sharing_type=sharing_type, 
-                                        treatment_effects=treatment_effects,way_of_administration=ways_of_administration[i], 
-                                        applicable_to_TRD=TRUE, applicable_to_PRD=TRUE, timestamp=timestamp)
-        }
-      }
-    }
- 
-    # some arms may be added.
-    # check again which cohorts are recruiting.
-    cohorts_left <- coh_left_check(x=res_list)   
-    # update again allocation ratio
     res_list <- update_alloc_ratio(res_list)
     
     
