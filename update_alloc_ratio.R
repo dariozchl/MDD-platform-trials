@@ -42,7 +42,7 @@ update_alloc_ratio <- function(res_list) {
         
         if(length(active_arms_in_admin) >= 1){
           for(j in active_arms_in_admin){
-            res_list[[population]][[j]]$alloc_ratio <- alloc_ratio[which(j==active_arms_in_admin)]
+            res_list[[population]][[j]]$alloc_ratio <- (alloc_ratio[-1])[which(j==active_arms_in_admin)]
           }
         }
         if(length(inactive_arms_in_admin) >= 1){
@@ -57,12 +57,12 @@ update_alloc_ratio <- function(res_list) {
     # weight of all compounds
     weight_vector <- sapply(X=k_vector,FUN=function(x) x+sqrt(x))
     # for each arm in each admin, change prob_admin
-      for(i in 1:length(ways_of_administration)){
-        for(j in grep(ways_of_administration[i],names(res_list[[population]]), value = TRUE)){
-          res_list[[population]][[j]]$prob_admin <- weight_vector[i]/sum(weight_vector) 
-        }
+    for(i in 1:length(ways_of_administration)){
+      for(j in grep(ways_of_administration[i],names(res_list[[population]]), value = TRUE)){
+        res_list[[population]][[j]]$prob_admin <- weight_vector[i]/sum(weight_vector) 
       }
     }
-
+  }
+  
   return(res_list)
 }
