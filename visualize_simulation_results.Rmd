@@ -11,35 +11,42 @@ library(ggpubr)
 library(viridis)
 
 sim_results <- readRDS("sim_results.rds")
+sim_results <- sim_results %>% mutate(admin = ifelse(admin=="pill", "oral", admin))
 ```
 
 # Simulation Setup
 
-There are 8 different scenarios that are simulated. They differ in: 
+There are 4 different scenarios that are simulated. They differ in: 
 
-  * the sample size per treatment arm (N=80 vs. N=100), 
   * the decision rule (liberal vs. conservative, see next paragraph for a discussion) and 
   * the recruitment speed (20 vs. 30 patients per month). 
 
 All other settings are identical for all simulations. Particularly, 
 
+  * the sample size is 90 patients with option to stop for futility after 45 patients,
   * all trials use concurrent controls only,
   * the assumptions for TRD and PRD are the same, 
-  * the assumptions for the three domains are the same, except for a higher probability of new oral treatments being available to be added to the platform,
-  * there cannot be more than 4 oral compounds and 3 nasal compounds and 3 IV compounds in the platform in parallel,
-  * allocation to control within each domain is held constant at 35%,
+  * effect sizes are the same for the three domains,
+  * expressed in standardized mean difference between baseline and 6-weeks MADRS score, effect sizes according to Cohen are: 
+      + d = 0.00
+      + d = 0.22
+      + d = 0.35
+      + d = 0.50
+      + the correlation between the two measuremnts is assumed to be rho = 0.214
+      + a new treatment is randomly assigned one of the four effect sizes with equal probability for each.  
+  * there cannot be more than 8 treatments in the platform in parallel,
+  * each month, if there are less than 8 active treatments in the platform, one new treatment might be added with probabilities 0.2 for oral, 0.1 for nasal and 0.1 for IV. 
+  * allocation ratio treatment:control within each domain is 1:sqrt(K), where K is the total number of treatments - however allocation to control is never less than 35% regardless of the number of treatments,
   * the platform does not add any more compounds at time points later than 60 months since platform start,
   * after this time point, the platform ends once all compounds have made a decision. 
 
 # Decisions
 
-Terminology: In the following, "conservative" refers to a setting with more strict decision rules, i.e., one-sided p-values of p<0.05 compared to control to claim success of a compound and p<0.4 to allow continuation to second stage, and "liberal" refers to a setting with less strict decision rules, i.e., one-sided p-values of p<0.1 compared to control to claim success of a compound and p<0.5 to allow continuation to second stage.
+Terminology: In the following, "conservative" refers to a setting with more strict decision rules, i.e., two-sided p-values of p<0.05 compared to control to claim success of a compound and p<0.4 to allow continuation to second stage, and "liberal" refers to a setting with less strict decision rules, i.e., two-sided p-values of p<0.1 compared to control to claim success of a compound and p<0.5 to allow continuation to second stage.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
 scenario_labeller <- labeller(
-  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
-  `N` = c(`80` = "N = 80", `100` = "N = 100")
-)
+  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"))
 
 sim_results %>% filter(patients_per_timepoint==30 & pvalues=="0.4,0.05") %>% 
   filter(treatment_ID != "Control") %>% 
@@ -47,33 +54,36 @@ sim_results %>% filter(patients_per_timepoint==30 & pvalues=="0.4,0.05") %>%
          cohens_d = factor(round(cohens_d_TRD,2))) %>% 
   group_by(admin, cohens_d, decisions_TRD, N, .drop=FALSE) %>% summarise(n=n()) %>%
   group_by(admin, cohens_d, N) %>% mutate(percentage = 100 * n / sum(n)) %>% 
-  ggplot(., aes(admin, percentage, color=decisions_TRD)) + geom_point(size=2, alpha = 1, position=position_dodge(width=0.5)) +
-  scale_y_continuous(limits=c(0,100), breaks = seq(0,100,by=20), minor_breaks = seq(0,100,by=10)) + 
-  xlab("Way of administration") + 
-  scale_color_viridis_d(begin = 0.1, end = 0.9, name="Decision") +
-  ylab("Percentage") + #ggtitle(title) +
-  geom_hline(data = data.frame(y = c(5, 80, 80, 80), cohens_d = as.factor(c(0,0.22,0.35,0.5))), aes(yintercept=y), linetype="dotted") +
-  #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
-  facet_grid(N ~ cohens_d, labeller = scenario_labeller) +
-  theme_bw() + ggtitle("Conservative decision rules:\nPercentage of each decision for various true effect sizes and under different sample sizes") +
-  theme(legend.position = "bottom")
+  {ggplot(., aes(admin, percentage, color=decisions_TRD)) + geom_point(size=2, alpha = 1, position=position_dodge(width=0.5)) + 
+      geom_text(data=subset(., decisions_TRD=="success"), aes(admin, percentage, label=round(percentage,2)), size=3, vjust=1.5, hjust=0.7) +
+      scale_y_continuous(limits=c(0,100), breaks = seq(0,100,by=20), minor_breaks = seq(0,100,by=10)) + 
+      xlab("Way of administration") + 
+      scale_color_viridis_d(begin = 0.1, end = 0.9, name="Decision") +
+      ylab("Percentage") + #ggtitle(title) +
+      geom_hline(data = data.frame(y = c(5, 80, 80, 80), cohens_d = as.factor(c(0,0.22,0.35,0.5))), aes(yintercept=y), linetype="dotted") +
+      #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
+      facet_grid( ~ cohens_d, labeller = scenario_labeller) +
+      theme_bw() + ggtitle("Conservative decision rules:\nPercentage of each decision for various true effect sizes and under different sample sizes") +
+      theme(legend.position = "bottom")}
 
-sim_results %>% filter(patients_per_timepoint==30 & pvalues=="0.5,0.1") %>% 
+sim_results %>% filter(patients_per_timepoint==30 & pvalues=="0.5,0.1")  %>% 
   filter(treatment_ID != "Control") %>% 
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          cohens_d = factor(round(cohens_d_TRD,2))) %>% 
   group_by(admin, cohens_d, decisions_TRD, N, .drop=FALSE) %>% summarise(n=n()) %>%
   group_by(admin, cohens_d, N) %>% mutate(percentage = 100 * n / sum(n)) %>% 
-  ggplot(., aes(admin, percentage, color=decisions_TRD)) + geom_point(size=2, alpha = 1, position=position_dodge(width=0.5)) +
-  scale_y_continuous(limits=c(0,100), breaks = seq(0,100,by=20), minor_breaks = seq(0,100,by=10)) + 
-  xlab("Way of administration") + 
-  scale_color_viridis_d(begin = 0.1, end = 0.9, name="Decision") +
-  ylab("Percentage") + #ggtitle(title) +
-  geom_hline(data = data.frame(y = c(5, 80, 80, 80), cohens_d = as.factor(c(0,0.22,0.35,0.5))), aes(yintercept=y), linetype="dotted") +
-  #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
-  facet_grid(N ~ cohens_d, labeller = scenario_labeller) +
-  theme_bw() + ggtitle("Liberal decision rules:\nPercentage of each decision for various true effect sizes and under different sample sizes") +
-  theme(legend.position = "bottom")
+  {ggplot(., aes(admin, percentage, color=decisions_TRD)) + geom_point(size=2, alpha = 1, position=position_dodge(width=0.5)) + 
+      geom_text(data=subset(., decisions_TRD=="success"), aes(admin, percentage, label=round(percentage,2)), size=3, vjust=1.5, hjust=0.7) +
+      scale_y_continuous(limits=c(0,100), breaks = seq(0,100,by=20), minor_breaks = seq(0,100,by=10)) + 
+      xlab("Way of administration") + 
+      scale_color_viridis_d(begin = 0.1, end = 0.9, name="Decision") +
+      ylab("Percentage") + #ggtitle(title) +
+      geom_hline(data = data.frame(y = c(5, 80, 80, 80), cohens_d = as.factor(c(0,0.22,0.35,0.5))), aes(yintercept=y), linetype="dotted") +
+      #geom_errorbar(aes(Prior, y=Proportion, ymin=lower, ymax=upper), size=0.5, position=position_dodge(width=0.5)) + 
+      facet_grid( ~ cohens_d, labeller = scenario_labeller) +
+      theme_bw() + ggtitle("Liberal decision rules:\nPercentage of each decision for various true effect sizes and under different sample sizes") +
+      theme(legend.position = "bottom")}
+
 
 ggsave("decisions_TRD.tiff", device = "tiff", width=9, height=4)
 
@@ -101,10 +111,8 @@ N_per_admin %>%
   pivot_longer(., cols=starts_with("n_"), names_to="pop", names_prefix="n_", values_to="n") %>%
   filter(pop=="TRD") %>%
   ggplot(.) + geom_violin(aes(x=admin, y=n, fill=admin)) +
-  facet_grid(N~patients_per_timepoint, labeller=labeller(
-    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-    `N` = c(`80`="N = 80", `100`="N = 100")
-  )) +
+  facet_grid(~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) +
   theme_bw() + ggtitle("Total number of patients per domain") + ylab("") + xlab("Domain") + theme(legend.position="none")
 ggsave("N_per_domain.tiff", device = "tiff", width=9, height=4)
 
@@ -118,10 +126,8 @@ N_per_pop <- sim_results %>% group_by(nsim, patients_per_timepoint, N) %>% summa
 N_per_pop %>% 
   pivot_longer(., cols=starts_with("n_"), names_to="pop", names_prefix="n_", values_to="n") %>%
   ggplot(.) + geom_violin(aes(x=as.factor(pop), y=n, fill=pop)) +
-  facet_grid(N~patients_per_timepoint, labeller=labeller(
-    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-    `N` = c(`80`="N = 80", `100`="N = 100")
-  )) +
+  facet_grid(~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) +
   theme_bw() + ggtitle("Total number of patients per population") + ylab("") + xlab("") + theme(legend.position="none")
 ggsave("N_per_pop.tiff", device = "tiff", width=9, height=4)
 
@@ -136,10 +142,8 @@ N_per_platform <- sim_results %>% group_by(nsim, patients_per_timepoint, N) %>% 
 
 N_per_platform %>% 
   ggplot(.) + geom_violin(aes(x="", y=n_total), fill="grey") +
-  facet_grid(N~patients_per_timepoint, labeller=labeller(
-    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-    `N` = c(`80`="N = 80", `100`="N = 100")
-  )) +
+  facet_grid(~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) +
   theme_bw() + ggtitle("Total number of patients per platform") + ylab("") + xlab("") + theme(legend.position="none")
 ggsave("N_per_platform.tiff", device = "tiff", width=9, height=4)
 
@@ -153,29 +157,41 @@ ggsave("N_per_platform.tiff", device = "tiff", width=9, height=4)
 sim_results %>% 
   filter(treatment_ID=="Control") %>% 
   ggplot(.) + geom_violin(aes(x=admin, y=n_TRD, fill=admin)) +
-  facet_grid(N~patients_per_timepoint, labeller=labeller(
-    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-    `N` = c(`80`="N = 80", `100`="N = 100")
-  )) +
-  theme_bw() + ylab("Sample Size") + xlab("Domain") 
+  facet_grid(~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) +
+  theme_bw() + ylab("Sample Size") + xlab("Domain")  + theme(legend.position="none")
 ggsave("sample_size_control_population.tiff", device = "tiff", width=9, height=3)
 
 ```
 
 
-# Size of control arms used for final analysis
+
+## Sample size of treatment arms for final decision (over-recruiting)
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
+
+sim_results %>% 
+  filter(treatment_ID!="Control") %>% 
+  ggplot(.) + geom_bar(aes(x=n_treatment_TRD, fill=admin), position = position_dodge2()) +
+  facet_grid(~patients_per_timepoint, labeller=labeller(`patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) +
+  theme_bw() + ylab("Count") + xlab("Sample size of treatment arm for final decision") + labs(fill="Domain") + theme(legend.position = "right")
+ggsave("sample_size_control_population.tiff", device = "tiff", width=9, height=3) 
+
+```
+
+
+# Size of control arms used for final decision (excl. stopping for futility)
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
 
 sim_results %>% 
   filter(decisions_TRD %in% c("success","failure")) %>% 
-  ggplot(.) + geom_violin(aes(x=admin, y=n_control_comparators_TRD, fill=admin)) +
-  facet_grid(N~patients_per_timepoint, labeller=labeller(
-    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-    `N` = c(`80`="N = 80", `100`="N = 100")
+  ggplot(.) + geom_bar(aes(x=n_control_comparators_TRD, fill=admin), position = position_dodge2()) +
+  facet_grid(~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients")
   )) +
-  theme_bw() + ylab("Size of control used in analysis") + xlab("Domain") 
-
+  theme_bw() + xlab("Size of control arm used for final decision") + ylab("Count") + labs(fill="Domain") + theme(legend.position = "right")
 
 ggsave("size_control_final_analysis.tiff", device = "tiff", width=9, height=3)
 
@@ -192,10 +208,8 @@ number_of_arms_per_admin %>% group_by(patients_per_timepoint, N, admin, "n"=as.f
   mutate(counts=counts/max(sim_results$nsim)*100) %>%
   ggplot(.) + 
   geom_bar(aes(x=as.factor(n), y=counts, fill=admin), stat="identity", position = "dodge", width=0.7) + 
-  facet_grid(N~patients_per_timepoint, labeller=labeller(
-    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-    `N` = c(`80`="N = 80", `100`="N = 100")
-  )) + coord_flip() +
+  facet_grid(~patients_per_timepoint, labeller=labeller(
+    `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) + coord_flip() +
   theme_bw() + ggtitle(paste0("Number of tested compounds per platform")) + ylab("Percentage of simulations") + xlab("Number of compounds") + 
   scale_fill_viridis_d(end=0.9, name="Domain")
 ggsave("treatments_per_admin.tiff", device = "tiff", width=9, height=4)
@@ -214,15 +228,15 @@ number_of_arms_per_platform <- sim_results %>% group_by(nsim, scenarioID) %>% co
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
 scenario_labeller <- labeller(
   `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
-  `admin` = c(`IV`="IV", `nasal`="nasal", `pill`="pill")
+  `admin` = c(`IV`="IV", `nasal`="nasal", `oral`="oral")
 )
 sim_results %>% filter(patients_per_timepoint==30) %>%
   filter(treatment_ID != "Control") %>% 
   mutate(cohens_d = factor(round(cohens_d_TRD,2))) %>%
-  ggplot(.) + geom_violin(aes(x=as.factor(N), y=cohens_d_TRD_est, fill=as.factor(N))) +
+  ggplot(.) + geom_violin(aes(x=as.factor(N), y=cohens_d_TRD_est), fill="grey") +
   geom_hline(data = data.frame(y = c(0, 0.22, 0.35, 0.5), cohens_d = as.factor(c(0,0.22,0.35, 0.5))), aes(yintercept=y), linetype="dotted") +
   facet_grid(admin~cohens_d, labeller = scenario_labeller) +
-  theme_bw() + ylab("Estimated Cohen's d") + ggtitle("Estimated Cohen's d") + xlab("Sample Size") + scale_fill_discrete(name="N")
+  theme_bw() + ylab("Estimated Cohen's d") + ggtitle("Estimated Cohen's d") + xlab("Sample Size") + scale_fill_discrete(name="N") + theme(legend.position = "none")
 ggsave("estimated_cohens_d.tiff", device = "tiff", width=9, height=3)
 
 ```
@@ -231,14 +245,17 @@ The estimation of the effect size is subject to variance, which is slightly redu
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
 
+scenario_labeller <- labeller(
+  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50")
+)
 sim_results %>% filter(patients_per_timepoint==30) %>%
   filter(treatment_ID != "Control") %>% 
   mutate(cohens_d = factor(round(cohens_d_TRD,2))) %>%
   group_by(admin, N, cohens_d) %>% summarise(est_cohens_d = mean(cohens_d_TRD_est)) %>%
   ggplot(.) + geom_point(aes(x=admin, y=est_cohens_d, fill=admin)) +
   geom_hline(data = data.frame(y = c(0, 0.22, 0.35, 0.5), cohens_d = as.factor(c(0,0.22,0.35, 0.5))), aes(yintercept=y), linetype="dotted") +
-  facet_grid(N~cohens_d, labeller = scenario_labeller) +
-  theme_bw() + ylab("Mean of estimated Cohen's d") + ggtitle("Bias in estimation of Cohen's d") + xlab("Domain")
+  facet_grid(~cohens_d, labeller = scenario_labeller) +
+  theme_bw() + ylab("Mean of estimated Cohen's d") + ggtitle("Bias in estimation of Cohen's d") + xlab("Domain") + theme(legend.position="none")
 ggsave("estimated_cohens_d.tiff", device = "tiff", width=9, height=3)
 
 ```
@@ -251,23 +268,35 @@ Bias is a systematic over- or underestimation of an estimator. The true value as
 ## Average duration per arm
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
-sim_results %>% group_by(N, patients_per_timepoint, admin) %>%
+sim_results %>% filter(treatment_ID != "Control") %>% 
+  group_by(cohens_d=round(cohens_d_TRD,2), patients_per_timepoint, admin) %>%
   summarise(duration=mean(duration_TRD)) %>%
   # when wrapping the whole ggplot call in {...} curly braces, you must use the . dot pronoun for the data argument in ggplot(., ...). Then you can call back that object using the . pronoun anywhere in the call.
   # https://stackoverflow.com/questions/45088454/how-do-i-access-the-data-frame-that-has-been-passed-to-ggplot
   {ggplot(.) + geom_segment(aes(x=0, xend=duration, y=admin, yend=admin), size=2) +
-      facet_grid(N~patients_per_timepoint, labeller=labeller(
-        `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-        `N` = c(`80`="N = 80", `100`="N = 100")
-      )) + theme_bw() + xlab("Duration (in months)") + ylab("Domain") + 
+      facet_grid(cohens_d~patients_per_timepoint, labeller=labeller(
+        `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
+        `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) + 
+      theme_bw() + xlab("Duration (in months)") + ylab("Domain") + 
       scale_x_continuous(breaks=seq(0,max(.$duration),by=10))}
 
 ```
 
 
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=8, fig.width=8}
+sim_results %>% filter(treatment_ID != "Control") %>% 
+  group_by(cohens_d=round(cohens_d_TRD,2), patients_per_timepoint, admin) %>%
+  ggplot(.) + geom_violin(aes(x=duration_TRD, y=admin, fill=admin)) +
+  facet_grid(cohens_d~patients_per_timepoint, labeller=labeller(
+        `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
+        `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) + 
+  theme_bw() + xlab("Duration (in months)") + ylab("Domain") + theme(legend.position = "none")
+```
+
+
 ## Average duration per arm with interval
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3, fig.width=8}
 sim_results %>% group_by(N, patients_per_timepoint, admin) %>%
   summarise(duration_mean=mean(duration_TRD),
             duration_q10=quantile(duration_TRD,probs=0.1),
@@ -277,13 +306,11 @@ sim_results %>% group_by(N, patients_per_timepoint, admin) %>%
   # when wrapping the whole ggplot call in {...} curly braces, you must use the . dot pronoun for the data argument in ggplot(., ...). Then you can call back that object using the . pronoun anywhere in the call.
   # https://stackoverflow.com/questions/45088454/how-do-i-access-the-data-frame-that-has-been-passed-to-ggplot
   {ggplot(.) + geom_linerange(aes(xmin=0, xmax=duration, y=admin, color=quantity), position = position_dodge(.5), size=2) +
-      facet_grid(N~patients_per_timepoint, labeller=labeller(
-        `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"),
-        `N` = c(`80`="N = 80", `100`="N = 100")
-      )) + theme_bw() + xlab("Duration (in months)") + ylab("Domain") + 
+      facet_grid(~patients_per_timepoint, labeller=labeller(
+        `patients_per_timepoint` = c(`20` = "Recruitment per month: 20 patients", `30` = "Recruitment per month: 30 patients"))) + theme_bw() + xlab("Duration (in months)") + ylab("Domain") + 
       scale_x_continuous(breaks=seq(0,max(.$duration),by=10)) + 
       scale_color_discrete(name="Quantity", labels=c("10% quantile", "Mean duration", "90% quantile")) +
-      theme(legend.position = "bottom", legend.direction="vertical")}
+      theme(legend.position = "right", legend.direction="vertical")}
 
 ```
 
@@ -292,7 +319,21 @@ sim_results %>% group_by(N, patients_per_timepoint, admin) %>%
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=5, fig.width=8}
 set.seed(11)
-sim_results %>% filter(nsim==sample(unique(.$nsim), 1) & scenarioID==5) %>%
+sim_results %>% filter(nsim==sample(unique(.$nsim), 1) & scenarioID==4) %>%
+  select(admin, treatment_ID, contains("timestamp")) %>%
+  pivot_longer(., cols=c(contains("first_timestamp"), contains("last_timestamp")), names_to=c("timestamp", "pop"),names_pattern = "(.+)_(.+)") %>%
+  pivot_wider(., names_from="timestamp", values_from="value") %>%
+  ggplot(.) + geom_segment(aes(x=first_timestamp, xend=last_timestamp, y=treatment_ID, yend=treatment_ID), size=2) +
+  facet_wrap(pop~admin, scales="free_y", labeller = label_wrap_gen(multi_line=FALSE)) + theme_bw() + 
+  xlab("Time point") + ylab("Treatment Arm") + ggtitle("Duration per arm for one selected simulation")
+sim_results %>% filter(nsim==sample(unique(.$nsim), 1) & scenarioID==4) %>%
+  select(admin, treatment_ID, contains("timestamp")) %>%
+  pivot_longer(., cols=c(contains("first_timestamp"), contains("last_timestamp")), names_to=c("timestamp", "pop"),names_pattern = "(.+)_(.+)") %>%
+  pivot_wider(., names_from="timestamp", values_from="value") %>%
+  ggplot(.) + geom_segment(aes(x=first_timestamp, xend=last_timestamp, y=treatment_ID, yend=treatment_ID), size=2) +
+  facet_wrap(pop~admin, scales="free_y", labeller = label_wrap_gen(multi_line=FALSE)) + theme_bw() + 
+  xlab("Time point") + ylab("Treatment Arm") + ggtitle("Duration per arm for one selected simulation")
+sim_results %>% filter(nsim==sample(unique(.$nsim), 1) & scenarioID==4) %>%
   select(admin, treatment_ID, contains("timestamp")) %>%
   pivot_longer(., cols=c(contains("first_timestamp"), contains("last_timestamp")), names_to=c("timestamp", "pop"),names_pattern = "(.+)_(.+)") %>%
   pivot_wider(., names_from="timestamp", values_from="value") %>%
@@ -301,5 +342,5 @@ sim_results %>% filter(nsim==sample(unique(.$nsim), 1) & scenarioID==5) %>%
   xlab("Time point") + ylab("Treatment Arm") + ggtitle("Duration per arm for one selected simulation")
 ```
 
-This is just one randomly chosen example. One could look at multiple such illustrations to get an impression of how the platform can potentially proceed. 
+These are just 3 randomly chosen examples. One could look at multiple such illustrations to get an impression of how the platform can potentially proceed. 
 

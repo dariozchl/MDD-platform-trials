@@ -5,15 +5,17 @@ library(mvtnorm)
 simulate_trial <- function(cohorts_start, n_int, n_fin,
                            treatment_effects, ways_of_administration,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type,
-                           patients_per_timepoint=c(30,30), prob_new_compound, 
+                           patients_per_timepoint, prob_new_compound, 
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
                            trial_end = "pipeline", # can be either "pipeline" or "timepoint"
                            number_of_compounds_cap, # can either be "separate" or "global"
-                           pipeline_size = c(10,4,4), latest_timepoint_treatment_added = 60,
+                           pipeline_size, latest_timepoint_treatment_added,
                            p_val_interim, p_val_final, sided) {
 
   ##### Initialization #####
-
+  
+  ways_of_administration <<- ways_of_administration
+  
   # dummy to indicate trial stop
   trial_stop <- FALSE
 
@@ -30,13 +32,14 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
   while (!trial_stop) {
     
     # check whether new compound is available and if yes, add it to res_list
-    res_list <- check_new_compound(res_list, number_of_compounds_cap, max_treatments)
+    res_list <- check_new_compound(res_list=res_list, number_of_compounds_cap=number_of_compounds_cap, max_treatments=max_treatments, prob_new_compound=prob_new_compound, 
+                                   trial_end=trial_end, timestamp=timestamp, latest_timepoint_treatment_added=latest_timepoint_treatment_added, ways_of_administration=ways_of_administration)
     
     # some arms may have been added, so check again which cohorts are recruiting.
     cohorts_left <- coh_left_check(x=res_list) 
     
     # update allocation ratio
-    res_list <- update_alloc_ratio(res_list)
+    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration)
     
     
     # sample size to be allocated to routes of administration
@@ -52,8 +55,13 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
       all_prob_admins <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$prob_admin))
       
       # sample from multinomial distribution with size of available patients how many patients are allocated to each treatment arm
-      # with probability derived from the allocation rations within and between each way of administration
-      if(sum(all_alloc_ratios * all_prob_admins) > 0){ n_all_arms <- rmultinom(n=1, size=n[population], prob=all_alloc_ratios * all_prob_admins) } else {n_all_arms <- 0}
+      # with probability derived from the allocation ratios within and across each way of administration
+      if(sum(all_alloc_ratios * all_prob_admins) > 0){ 
+        # allocate all available patients according to the probability all_alloc_ratios * all_prob_admins
+        n_all_arms <- rmultinom(n=1, size=n[population], prob=all_alloc_ratios * all_prob_admins) 
+      } else {
+        n_all_arms <- 0
+      }
       
       for (i in row.names(n_all_arms)) {
         

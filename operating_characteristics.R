@@ -57,9 +57,11 @@ operating_characteristics <- function(res_list){
   ocs <- ocs[2:length(ocs)]
   
   # size of control being used for each decision (implement this for interim decisions, too?)
+  n_treatment_TRD <- sapply(res_list$TRD, function(y) {ifelse(is.null(y$endpoint$n_treatment), NA, y$endpoint$n_treatment)})
+  n_treatment_PRD <- sapply(res_list$PRD, function(y) {ifelse(is.null(y$endpoint$n_treatment), NA, y$endpoint$n_treatment)})
   n_control_comparators_TRD <- sapply(res_list$TRD, function(y) {ifelse(is.null(y$endpoint$n_control), NA, y$endpoint$n_control)})
   n_control_comparators_PRD <- sapply(res_list$PRD, function(y) {ifelse(is.null(y$endpoint$n_control), NA, y$endpoint$n_control)})
-  n_control_comparators <- cbind(as.data.frame(n_control_comparators_TRD), as.data.frame(n_control_comparators_PRD))
+  n_control_comparators <- cbind(as.data.frame(n_treatment_TRD), as.data.frame(n_treatment_PRD), as.data.frame(n_control_comparators_TRD), as.data.frame(n_control_comparators_PRD))
   ocs <- merge(ocs, n_control_comparators, by="row.names")
   rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
   ocs <- ocs[2:length(ocs)]
