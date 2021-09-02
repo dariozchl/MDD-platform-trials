@@ -1,5 +1,6 @@
-check_new_compound <- function(res_list, number_of_compounds_cap, max_treatments){
+check_new_compound <- function(res_list, number_of_compounds_cap, max_treatments, prob_new_compound, trial_end, timestamp, latest_timepoint_treatment_added, ways_of_administration=c("pill", "IV", "nasal")){
   
+  cohorts_left <- coh_left_check(res_list)
   
   if(number_of_compounds_cap == "separate"){ # should each compound have their own cap
     

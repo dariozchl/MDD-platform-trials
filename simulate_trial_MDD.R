@@ -13,7 +13,9 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
                            p_val_interim, p_val_final, sided) {
 
   ##### Initialization #####
-
+  
+  ways_of_administration <<- ways_of_administration
+  
   # dummy to indicate trial stop
   trial_stop <- FALSE
 
@@ -30,13 +32,14 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
   while (!trial_stop) {
     
     # check whether new compound is available and if yes, add it to res_list
-    res_list <- check_new_compound(res_list, number_of_compounds_cap, max_treatments)
+    res_list <- check_new_compound(res_list=res_list, number_of_compounds_cap=number_of_compounds_cap, max_treatments=max_treatments, prob_new_compound=prob_new_compound, 
+                                   trial_end=trial_end, timestamp=timestamp, latest_timepoint_treatment_added=latest_timepoint_treatment_added, ways_of_administration=ways_of_administration)
     
     # some arms may have been added, so check again which cohorts are recruiting.
     cohorts_left <- coh_left_check(x=res_list) 
     
     # update allocation ratio
-    res_list <- update_alloc_ratio(res_list)
+    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration)
     
     
     # sample size to be allocated to routes of administration
@@ -55,7 +58,6 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
       # with probability derived from the allocation ratios within and across each way of administration
       if(sum(all_alloc_ratios * all_prob_admins) > 0){ 
         # allocate all available patients according to the probability all_alloc_ratios * all_prob_admins
-        # the remainder is allocated randomly
         n_all_arms <- rmultinom(n=1, size=n[population], prob=all_alloc_ratios * all_prob_admins) 
       } else {
         n_all_arms <- 0

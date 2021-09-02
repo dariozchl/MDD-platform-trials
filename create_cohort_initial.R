@@ -1,10 +1,8 @@
 
 #' Helper Function: Create new cohort initially
 #' @export
-create_cohort_initial <- function(cohorts_start, n_int, n_fin, treatment_effects, ways_of_administration=c("pill", "IV", "nasal"),
+create_cohort_initial <- function(cohorts_start, n_int, n_fin, treatment_effects, ways_of_administration,
                                   cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD) {
-
-  ways_of_administration <<- ways_of_administration
 
   cohorts_start_TRD <- list(); cohorts_start_PRD <- list(); cohorts_per_administration_TRD <- list(); cohorts_per_administration_PRD <- list()
   # sample whether cohorts are applicable to TRD and PRD

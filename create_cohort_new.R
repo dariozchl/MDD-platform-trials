@@ -30,8 +30,6 @@ create_cohort_new <- function(res_list, n_int, n_fin, sharing_type, treatment_ef
     
   }
 
-    # Update allocation ratio
-  res_list <- update_alloc_ratio(res_list)
 
   return(res_list)
 }

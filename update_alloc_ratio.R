@@ -1,9 +1,11 @@
 
 #' Helper Function: Update Allocation Ratio
 #' @export
-update_alloc_ratio <- function(res_list) {
+update_alloc_ratio <- function(res_list, ways_of_administration) {
   
   cohorts_left <- coh_left_check(res_list)[-c(1:length(ways_of_administration)),] # the [-c(1:3)] drops the controls from the assessment, since controls are always "active"
+  
+  k_vector <- rep(0,length(ways_of_administration)) # vector that will contain the number of active treatments per admin
   
   for(population in 1:2){
     active_admin <- unique(gsub(pattern="_.*", "", (rownames(cohorts_left))[(cohorts_left[,population])])) 
@@ -21,7 +23,6 @@ update_alloc_ratio <- function(res_list) {
     
     # for all active admins and arms, we need to assign a specific allocation ratio
     if(length(active_admin) >= 1) {
-      k_vector <- rep(0,length(ways_of_administration)) # vector that will contain the number of active treatments per admin
       for(i in 1:length(active_admin)){
         
         active_arms_in_admin_index <- grep(active_admin[i], ((names(res_list[[population]]))[-c(1:3)])[cohorts_left[,population]])
@@ -59,7 +60,7 @@ update_alloc_ratio <- function(res_list) {
     # for each arm in each admin, change prob_admin
     for(i in 1:length(ways_of_administration)){
       for(j in grep(ways_of_administration[i],names(res_list[[population]]), value = TRUE)){
-        res_list[[population]][[j]]$prob_admin <- weight_vector[i]/sum(weight_vector) 
+        res_list[[population]][[j]]$prob_admin <- ifelse(sum(weight_vector)==0, 0, weight_vector[i]/sum(weight_vector)) 
       }
     }
   }

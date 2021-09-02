@@ -1,4 +1,3 @@
-# This is a function to run the simulations
 library(tidyverse)
 library(doParallel)
 
@@ -64,7 +63,7 @@ treatment_effects <- list(
 
 
 start.time <- Sys.time()
-cores <- detectCores() * 3/4
+cores <- detectCores() * 1/4
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
@@ -118,6 +117,7 @@ sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% c(1,2,5,6) ~
                                       pvalues = case_when(scenarioID %in% 1:4 ~ "0.4,0.05", TRUE ~ "0.5,0.1"))
 
 saveRDS(sim_results, "sim_results.rds")
+
 
 
 

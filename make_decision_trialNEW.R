@@ -27,9 +27,8 @@ make_decision_trial <- function(res_list, which_pop=c("TRD","PRD"),
      }
     
     if (control_type == "concurrent") {
-       conc_times <- unique(res_list[[which_pop]][[which_treat]]$data[,which(colnames(res_list[[which_pop]][[which_treat]]$data) == "timestamp")])
-       conc_controls <- res_list[[which_pop]][[control_needed]]$data[
-         which(res_list[[which_pop]][[control_needed]]$data[,which(colnames(res_list[[which_pop]][[which_treat]]$data) == "timestamp")] %in% conc_times == TRUE),]
+       conc_times <- unique(res_list[[which_pop]][[which_treat]]$data[,"timestamp"])
+       conc_control <- res_list[[which_pop]][[control_needed]]$data[which(res_list[[which_pop]][[control_needed]]$data[,"timestamp"]>=min(conc_times) & res_list[[which_pop]][[control_needed]]$data[,"timestamp"]<=max(conc_times)),]
        baseline_contr <- conc_controls[,1]
        endpoint_contr <- conc_controls[,1+which_measure]
        }
