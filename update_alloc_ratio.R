@@ -34,9 +34,8 @@ update_alloc_ratio <- function(res_list, ways_of_administration) {
         k <- length(active_arms_in_admin) # number of treatment arms (without control)
         k_vector[which(ways_of_administration==active_admin[i])] <- k 
         if(k >= 1){ # if there are active treatments
-          alloc_ratio <- c(1/sqrt(k), rep(1/k,k)) / sum(c(1/sqrt(k), rep(1/k,k))) # standard 1:(1/sqrt(k)) allocation
+          if(k>3){alloc_ratio <- c(0.35, rep(0.65/k,k))} else {alloc_ratio <- c(1/sqrt(k), rep(1/k,k)) / sum(c(1/sqrt(k), rep(1/k,k)))} # standard 1:(1/sqrt(k)) allocation with cap at 0.35 to control
           res_list[[population]][[paste0(active_admin[i], "_Control")]]$alloc_ratio <- alloc_ratio[1]
-          res_list[[population]][[paste0(active_admin[i], "_Control")]]$prob_admin <- rep(1/number_of_active_admin, number_of_active_admin)[i]
         } else { # if there is only control active
           alloc_ratio <- 0
         }

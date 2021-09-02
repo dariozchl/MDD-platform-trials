@@ -63,17 +63,17 @@ treatment_effects <- list(
 
 
 start.time <- Sys.time()
-cores <- detectCores() * 1/4
+cores <- detectCores() * 3/4
 cl <- makeCluster(cores)
 registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 100
+nsim <- 10000
 sim_results <- NULL
 
 patients_per_timepoint = list(c(30,30), c(20,20))
-n_fin <- list(list("TRD"=100,"PRD"=100), list("TRD"=80,"PRD"=80))
+n_fin <- list(list("TRD"=90,"PRD"=90))
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, "n_fin"=n_fin, "pvals"=list(c(0.4,0.05), c(0.5,0.1)))
 
 
@@ -88,11 +88,11 @@ for(i in 1:nrow(scenarios)){
                                          cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
-                                         prob_new_compound=c(0.1,0.05,0.05), 
-                                         max_treatments=c(10), 
+                                         prob_new_compound=c(0.2,0.1,0.1), 
+                                         max_treatments=c(8), 
                                          trial_end="timepoint", latest_timepoint_treatment_added=60, number_of_compounds_cap="global",
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
-                                         p_val_interim=scenarios$pvals[[i]][1], p_val_final=scenarios$pvals[[i]][2], sided="one_sided")
+                                         p_val_interim=scenarios$pvals[[i]][1], p_val_final=scenarios$pvals[[i]][2], sided="two_sided")
     
     
     ocs <- data.frame(operating_characteristics(single_sim_results) %>% 
@@ -100,7 +100,11 @@ for(i in 1:nrow(scenarios)){
                         mutate(admin = gsub("_.*", "", armID), 
                                treatment_ID = case_when(grepl("Control", armID) ~ "Control", TRUE ~ gsub(".*_Treatment", "", armID))) %>% 
                         relocate(admin, treatment_ID, .before=armID) %>% select(-armID),
-                      "nsim"=nsim)
+                      "nsim"=nsim) %>% 
+      # add specific information about the scenarios
+      mutate(N = scenarios$n_fin[[i]][[1]], 
+             patients_per_timepoint = scenarios$patients_per_timepoint[[i]][1],
+             pvalues = paste(scenarios$pvals[[i]], collapse=","))
     
     return(ocs)
   }
@@ -109,12 +113,6 @@ for(i in 1:nrow(scenarios)){
 }
 stopCluster(cl)
 sim_results <- as_tibble(sim_results)
-
-# add specific information about the scenarios
-# CAUTION: this needs to be adjusted when simulation scenarios are altered
-sim_results <- sim_results %>% mutate(N = case_when(scenarioID %in% c(1,2,5,6) ~ 100, TRUE ~ 80), N = as.factor(N),
-                                      patients_per_timepoint = case_when(scenarioID %in% c(1,3,5,7) ~ 30, TRUE ~ 20),
-                                      pvalues = case_when(scenarioID %in% 1:4 ~ "0.4,0.05", TRUE ~ "0.5,0.1"))
 
 saveRDS(sim_results, "sim_results.rds")
 

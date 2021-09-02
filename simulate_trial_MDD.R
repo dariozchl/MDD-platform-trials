@@ -5,11 +5,11 @@ library(mvtnorm)
 simulate_trial <- function(cohorts_start, n_int, n_fin,
                            treatment_effects, ways_of_administration,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type,
-                           patients_per_timepoint=c(30,30), prob_new_compound, 
+                           patients_per_timepoint, prob_new_compound, 
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
                            trial_end = "pipeline", # can be either "pipeline" or "timepoint"
                            number_of_compounds_cap, # can either be "separate" or "global"
-                           pipeline_size = c(10,4,4), latest_timepoint_treatment_added = 60,
+                           pipeline_size, latest_timepoint_treatment_added,
                            p_val_interim, p_val_final, sided) {
 
   ##### Initialization #####
