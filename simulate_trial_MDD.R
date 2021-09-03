@@ -7,9 +7,10 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
                            cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type,
                            patients_per_timepoint, prob_new_compound, 
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
-                           trial_end = "pipeline", # can be either "pipeline" or "timepoint"
+                           trial_end, # can be either "pipeline" or "timepoint"
                            number_of_compounds_cap, # can either be "separate" or "global"
-                           pipeline_size, latest_timepoint_treatment_added,
+                           pipeline_size, 
+                           latest_timepoint_treatment_added, # must always be specified to avoid running forever
                            p_val_interim, p_val_final, sided) {
 
   ##### Initialization #####
@@ -82,9 +83,8 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, sided=sided, n_fin=n_fin, n_int=n_int, timestamp=timestamp)
     
-    if(all(colSums(coh_left_check(res_list)) == 3)){trial_stop=TRUE}
-    if(TOTAL_N[[1]] > 1e4 | TOTAL_N[[2]] > 1e4){trial_stop=TRUE}
-    
+    if(all(colSums(coh_left_check(res_list)) == length(ways_of_administration)) & timestamp>=latest_timepoint_treatment_added){trial_stop=TRUE}
+
     print(timestamp)
   }
     
