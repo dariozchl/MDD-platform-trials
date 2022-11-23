@@ -1,5 +1,6 @@
 library(tidyverse)
 library(doParallel)
+library(openxlsx)
 
 
 source("create_cohort_initial.R")
@@ -61,7 +62,7 @@ treatment_effects <- list(
                                     probs=c(0.25,0.25,0.25,0.25)))
   )
 
-
+#################################################################################
 start.time <- Sys.time()
 cores <- detectCores() * 3/4
 cl <- makeCluster(cores)
@@ -72,9 +73,9 @@ registerDoParallel(cl)
 nsim <- 10000
 sim_results <- NULL
 
-patients_per_timepoint = list(c(30,30), c(20,20))
-n_fin <- list(list("TRD"=90,"PRD"=90))
-scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, "n_fin"=n_fin, "pvals"=list(c(0.4,0.05), c(0.5,0.1)))
+patients_per_timepoint = list(c(30,30))
+n_fin <- list(list("TRD"=40,"PRD"=40), list("TRD"=60,"PRD"=60), list("TRD"=80,"PRD"=80), list("TRD"=100,"PRD"=100), list("TRD"=120,"PRD"=120))
+scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, "n_fin"=n_fin, "pvals"=list(c(0.5,0.1)))
 
 
 for(i in 1:nrow(scenarios)){
@@ -118,14 +119,12 @@ saveRDS(sim_results, "sim_results.rds")
 
 
 
-
-
 # PLOTS
 
 ##################################################################
 ### decisions
 scenario_labeller <- labeller(
-  `cohens_d` = c(`0` = "Cohen's d = 0", `0.22` = "Cohen's d = 0.22", `0.35` = "Cohen's d = 0.35", `0.5` = "Cohen's d = 0.50"),
+  `cohens_d` = c(`0` = "d = 0", `0.22` = "d = 0.22", `0.35` = "d = 0.35", `0.5` = "d = 0.50"),
   `N` = c(`80` = "N = 80", `100` = "N = 100")
 )
 # decisions
