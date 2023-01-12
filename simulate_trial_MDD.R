@@ -2,16 +2,24 @@
 
 library(mvtnorm)
 
-simulate_trial <- function(cohorts_start, n_int, n_fin,
-                           treatment_effects, ways_of_administration,
-                           cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD, sharing_type,
-                           patients_per_timepoint, prob_new_compound, 
+simulate_trial <- function(cohorts_start, 
+                           n_int, 
+                           n_fin,
+                           treatment_effects, 
+                           ways_of_administration,
+                           cohorts_start_applic_to_TRD, 
+                           cohorts_start_applic_to_PRD, 
+                           sharing_type,
+                           patients_per_timepoint, 
+                           prob_new_compound, 
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
                            trial_end, # can be either "pipeline" or "timepoint"
                            number_of_compounds_cap, # can either be "separate" or "global"
                            pipeline_size, 
                            latest_timepoint_treatment_added, # must always be specified to avoid running forever
-                           p_val_interim, p_val_final, sided) {
+                           p_val_interim, 
+                           p_val_final, 
+                           sided) {
 
   ##### Initialization #####
   
@@ -21,9 +29,13 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
   trial_stop <- FALSE
 
   # Initialize res_list
-  res_list <- create_cohort_initial(cohorts_start=cohorts_start, n_int=n_int, n_fin=n_fin,
-                                    treatment_effects=treatment_effects, ways_of_administration=ways_of_administration,
-                                    cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD)
+  res_list <- create_cohort_initial(cohorts_start=cohorts_start, 
+                                    n_int=n_int, 
+                                    n_fin=n_fin,
+                                    treatment_effects=treatment_effects, 
+                                    ways_of_administration=ways_of_administration,
+                                    cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, 
+                                    cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD)
 
   Total_N_Vector <- NULL
 
@@ -33,8 +45,14 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
   while (!trial_stop) {
     
     # check whether new compound is available and if yes, add it to res_list
-    res_list <- check_new_compound(res_list=res_list, number_of_compounds_cap=number_of_compounds_cap, max_treatments=max_treatments, prob_new_compound=prob_new_compound, 
-                                   trial_end=trial_end, timestamp=timestamp, latest_timepoint_treatment_added=latest_timepoint_treatment_added, ways_of_administration=ways_of_administration)
+    res_list <- check_new_compound(res_list=res_list, 
+                                   number_of_compounds_cap=number_of_compounds_cap, 
+                                   max_treatments=max_treatments, 
+                                   prob_new_compound=prob_new_compound, 
+                                   trial_end=trial_end, 
+                                   timestamp=timestamp, 
+                                   latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
+                                   ways_of_administration=ways_of_administration)
     
     # some arms may have been added, so check again which cohorts are recruiting.
     cohorts_left <- coh_left_check(x=res_list) 
@@ -52,8 +70,10 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     for(population in 1:2){
       
       # get vectors with allocation ratios within domain and allocation ratios for each domain
-      all_alloc_ratios <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$alloc_ratio))
-      all_prob_admins <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], FUN=function(X) return(res_list[[population]][[X]]$prob_admin))
+      all_alloc_ratios <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], 
+                                 FUN=function(X) return(res_list[[population]][[X]]$alloc_ratio))
+      all_prob_admins <- sapply(X=row.names(cohorts_left)[cohorts_left[,population]], 
+                                FUN=function(X) return(res_list[[population]][[X]]$prob_admin))
       
       # sample from multinomial distribution with size of available patients how many patients are allocated to each treatment arm
       # with probability derived from the allocation ratios within and across each way of administration
@@ -66,7 +86,9 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
       
       for (i in row.names(n_all_arms)) {
         
-        n_arm <- n_all_arms[grep(paste0("^", i, "$"), rownames(n_all_arms))] # ^ asserts that we are at the start. $ asserts that we are at the end. If there were treatment1 and treatment10, then "treatment1" would be found twice.
+        # ^ asserts that we are at the start. $ asserts that we are at the end. 
+        # If there were treatment1 and treatment10, then "treatment1" would be found twice.
+        n_arm <- n_all_arms[grep(paste0("^", i, "$"), rownames(n_all_arms))] 
         response <- res_list[[population]][[i]]$response
         
         if(n_arm >= 1){
@@ -81,9 +103,16 @@ simulate_trial <- function(cohorts_start, n_int, n_fin,
     
     TOTAL_N <- total_n(res_list)
     
-    res_list <- make_decision_wrapper(res_list=res_list, p_val_final=p_val_final, p_val_interim=p_val_interim, sided=sided, n_fin=n_fin, n_int=n_int, timestamp=timestamp)
+    res_list <- make_decision_wrapper(res_list=res_list, 
+                                      p_val_final=p_val_final, 
+                                      p_val_interim=p_val_interim, 
+                                      sided=sided, 
+                                      n_fin=n_fin, 
+                                      n_int=n_int, 
+                                      timestamp=timestamp)
     
-    if(all(colSums(coh_left_check(res_list)) == length(ways_of_administration)) & timestamp>=latest_timepoint_treatment_added){trial_stop=TRUE}
+    if(all(colSums(coh_left_check(res_list)) == length(ways_of_administration)) & 
+       timestamp>=latest_timepoint_treatment_added){trial_stop=TRUE}
 
     print(timestamp)
   }
