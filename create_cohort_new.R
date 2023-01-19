@@ -6,9 +6,9 @@ create_cohort_new <- function(res_list,
                               n_fin, 
                               sharing_type, 
                               treatment_effects, 
-                              way_of_administration, 
-                              applicable_to_TRD=TRUE, 
-                              applicable_to_PRD=TRUE, 
+                              way_of_administration,
+                              applicable_to_TRD=TRUE,
+                              applicable_to_PRD=TRUE,
                               timestamp=timestamp) {
 
 

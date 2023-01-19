@@ -6,9 +6,9 @@ simulate_trial <- function(cohorts_start,
                            n_int, 
                            n_fin,
                            treatment_effects, 
-                           ways_of_administration,
-                           cohorts_start_applic_to_TRD, 
-                           cohorts_start_applic_to_PRD, 
+                           ways_of_administration, 
+                           cohorts_start_applic_to_TRD, #
+                           cohorts_start_applic_to_PRD, #
                            sharing_type,
                            patients_per_timepoint, 
                            prob_new_compound, 
@@ -23,7 +23,7 @@ simulate_trial <- function(cohorts_start,
 
   ##### Initialization #####
   
-  ways_of_administration <<- ways_of_administration
+  ways_of_administration <<- ways_of_administration 
   
   # dummy to indicate trial stop
   trial_stop <- FALSE
@@ -34,12 +34,15 @@ simulate_trial <- function(cohorts_start,
                                     n_fin=n_fin,
                                     treatment_effects=treatment_effects, 
                                     ways_of_administration=ways_of_administration,
-                                    cohorts_start_applic_to_TRD=cohorts_start_applic_to_TRD, 
-                                    cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD)
+                                    cohorts_start_applic_to_TRD=cohorts_start, #
+                                    cohorts_start_applic_to_PRD=cohorts_start  #
+                                    )
 
   Total_N_Vector <- NULL
 
   timestamp <- 0
+  time_periode <- 0
+  remove_compound <<- FALSE
 
   ##### Running Simulations #####
   while (!trial_stop) {
@@ -52,19 +55,24 @@ simulate_trial <- function(cohorts_start,
                                    trial_end=trial_end, 
                                    timestamp=timestamp, 
                                    latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
-                                   ways_of_administration=ways_of_administration)
+                                   ways_of_administration=ways_of_administration) 
     
     # some arms may have been added, so check again which cohorts are recruiting.
     cohorts_left <- coh_left_check(x=res_list) 
     
     # update allocation ratio
-    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration)
-    
+    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration) 
     
     # sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD
     n <- rpois(n=2, lambda=patients_per_timepoint)
     
+    # update time stamps here since new patients were just recruited
+    timestamp <- timestamp + 1
+    if(add_compound == TRUE || remove_compound == TRUE){
+      time_periode <- time_periode + 1
+    }
+    remove_compound <<- FALSE
     
     # Get new patients and responders for each cohort
     for(population in 1:2){
@@ -79,7 +87,9 @@ simulate_trial <- function(cohorts_start,
       # with probability derived from the allocation ratios within and across each way of administration
       if(sum(all_alloc_ratios * all_prob_admins) > 0){ 
         # allocate all available patients according to the probability all_alloc_ratios * all_prob_admins
-        n_all_arms <- rmultinom(n=1, size=n[population], prob=all_alloc_ratios * all_prob_admins) 
+        n_all_arms <- rmultinom(n=1, 
+                                size=n[population], 
+                                prob=all_alloc_ratios * all_prob_admins) 
       } else {
         n_all_arms <- 0
       }
@@ -88,19 +98,23 @@ simulate_trial <- function(cohorts_start,
         
         # ^ asserts that we are at the start. $ asserts that we are at the end. 
         # If there were treatment1 and treatment10, then "treatment1" would be found twice.
-        n_arm <- n_all_arms[grep(paste0("^", i, "$"), rownames(n_all_arms))] 
+        n_arm <- n_all_arms[grep(paste0("^", i, "$"), 
+                                 rownames(n_all_arms))] 
         response <- res_list[[population]][[i]]$response
         
         if(n_arm >= 1){
-          draw <- rmvnorm(n=n_arm, mean=response$mean, sigma=response$sigma)
-          draw <- cbind(draw, timestamp)
+          draw <- rmvnorm(n=n_arm, 
+                          mean=response$mean, 
+                          sigma=response$sigma)
+          draw <- cbind(draw, 
+                        timestamp, 
+                        time_periode,
+                        "active_arms"=sum(cohorts_left[,population]==TRUE)) 
           res_list[[population]][[i]]$data <- rbind(res_list[[population]][[i]]$data, draw)
         }
       }
     }
-    
-    timestamp <- timestamp + 1
-    
+   
     TOTAL_N <- total_n(res_list)
     
     res_list <- make_decision_wrapper(res_list=res_list, 

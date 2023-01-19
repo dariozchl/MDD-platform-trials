@@ -4,10 +4,11 @@
 update_alloc_ratio <- function(res_list, 
                                ways_of_administration) {
   
-  # the [-c(1:3)] drops the controls from the assessment, since controls are always "active"
+  # the [-c(1:length(ways_of_administration))] drops the controls from the assessment, since controls are always "active"
   cohorts_left <- coh_left_check(res_list)[-c(1:length(ways_of_administration)),] 
   
-  k_vector <- rep(0,length(ways_of_administration)) # vector that will contain the number of active treatments per admin
+  # initialize vector that will contain the number of active treatments per admin
+  k_vector <- rep(0,length(ways_of_administration))
   
   for(population in 1:2){
     active_admin <- unique(gsub(pattern="_.*", "", (rownames(cohorts_left))[(cohorts_left[,population])])) 
@@ -28,12 +29,12 @@ update_alloc_ratio <- function(res_list,
       for(i in 1:length(active_admin)){
         
         active_arms_in_admin_index <- grep(active_admin[i], 
-                                           ((names(res_list[[population]]))[-c(1:3)])[cohorts_left[,population]])
-        active_arms_in_admin <- (((names(res_list[[population]]))[-c(1:3)])[cohorts_left[,population]])[active_arms_in_admin_index]
+                                           ((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[cohorts_left[,population]])
+        active_arms_in_admin <- (((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[cohorts_left[,population]])[active_arms_in_admin_index]
         
         inactive_arms_in_admin_index <- grep(active_admin[i], 
-                                             ((names(res_list[[population]]))[-c(1:3)])[!cohorts_left[,population]])
-        inactive_arms_in_admin <- (((names(res_list[[population]]))[-c(1:3)])[!cohorts_left[,population]])[inactive_arms_in_admin_index]
+                                             ((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[!cohorts_left[,population]])
+        inactive_arms_in_admin <- (((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[!cohorts_left[,population]])[inactive_arms_in_admin_index]
         
         k <- length(active_arms_in_admin) # number of treatment arms (without control)
         k_vector[which(ways_of_administration==active_admin[i])] <- k 
@@ -41,6 +42,7 @@ update_alloc_ratio <- function(res_list,
           if(k>3){alloc_ratio <- c(0.35, rep(0.65/k,k))} else {
             # standard 1:(1/sqrt(k)) allocation with cap at 0.35 to control
             alloc_ratio <- c(1/sqrt(k), rep(1/k,k)) / sum(c(1/sqrt(k), rep(1/k,k)))} 
+          # writes allocation rate for control arms
           res_list[[population]][[paste0(active_admin[i], "_Control")]]$alloc_ratio <- alloc_ratio[1]
         } else { # if there is only control active
           alloc_ratio <- 0

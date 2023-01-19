@@ -5,11 +5,12 @@ create_cohort_initial <- function(cohorts_start,
                                   n_int, 
                                   n_fin, 
                                   treatment_effects, 
-                                  ways_of_administration,
-                                  cohorts_start_applic_to_TRD, 
-                                  cohorts_start_applic_to_PRD) {
+                                  ways_of_administration, 
+                                  cohorts_start_applic_to_TRD,
+                                  cohorts_start_applic_to_PRD
+                                  ) {
 
-  # initialize lits
+  # initialize lists
   cohorts_start_TRD <- list(); 
   cohorts_start_PRD <- list(); 
   cohorts_per_administration_TRD <- list(); 
@@ -53,9 +54,12 @@ create_cohort_initial <- function(cohorts_start,
     } else {
       name_placeholder <- paste0(unlist(cohorts_per_administration_TRD)[i-length(ways_of_administration)], "_Treatment")
       # check how many treatments there are already for this way of administration and add 1 to set the index
-      names(res_list$TRD)[i] <- paste0(name_placeholder, length(grep(name_placeholder, names(res_list$TRD)))+1) 
+      names(res_list$TRD)[i] <- paste0(name_placeholder, 
+                                       length(grep(name_placeholder, 
+                                                   names(res_list$TRD)))+1) 
     }
-    res_list$TRD[[i]]$response <- treatment_effects$TRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]]
+    res_list$TRD[[i]]$response <- treatment_effects$TRD[[paste(name_placeholder)]][[sample(
+      x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]]
   }
 
   for (i in 1:length(res_list$PRD)) {
@@ -65,9 +69,12 @@ create_cohort_initial <- function(cohorts_start,
     } else {
       name_placeholder <- paste0(unlist(cohorts_per_administration_PRD)[i-length(ways_of_administration)], "_Treatment")
       # check how many treatments there are already for this way of administration and add 1 to set the index
-      names(res_list$PRD)[i] <- paste0(name_placeholder, length(grep(name_placeholder, names(res_list$PRD)))+1) 
+      names(res_list$PRD)[i] <- paste0(name_placeholder, 
+                                       length(grep(name_placeholder, 
+                                                   names(res_list$PRD)))+1) 
     }
-    res_list$PRD[[i]]$response <- treatment_effects$PRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]]
+    res_list$PRD[[i]]$response <- treatment_effects$PRD[[paste(name_placeholder)]][[sample(
+      x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]]
   }
 
   return(res_list)
