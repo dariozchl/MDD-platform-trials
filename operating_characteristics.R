@@ -10,18 +10,21 @@ operating_characteristics <- function(res_list){
                                               ifelse(y$decision[2] == "success", "success", 
                                                      ifelse(y$decision[2] == "failure", "failure", "ERROR")))})
   
-  decisions <- cbind(as.data.frame(decisions_TRD), as.data.frame(decisions_PRD))
+  #decisions <- cbind(as.data.frame(decisions_TRD), as.data.frame(decisions_PRD))
+  decisions <- merge(as.data.frame(decisions_TRD), as.data.frame(decisions_PRD), by="row.names", all = TRUE)#[-1]
+  rownames(decisions) <- decisions$Row.names # merge() turns rownames into a new column "Row.names"
+  decisions <- decisions[2:length(decisions)]
   
 
   # effect sizes: using the fact that X - Y ~ N(mu_X - mu_Y, sd_X^2 + sd_Y^2 - 2 * cov_XY)
   cohens_d_TRD <- c() 
   cohens_d_TRD_est <- c()
   for(way_of_administration in ways_of_administration) {
-    mean_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] 
-                                    - res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
-    var_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4] 
-                                    + res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1] 
-                                    - 2 * res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
+    mean_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] - 
+                                    res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
+    var_baseline_change_control <- res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4] + 
+                                   res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1] - 
+                                   2 * res_list$TRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
     
     cohens_d_TRD <- c(cohens_d_TRD,
                       sapply(res_list$TRD[grep(pattern=way_of_administration, 
@@ -42,11 +45,11 @@ operating_characteristics <- function(res_list){
   cohens_d_PRD <- c()
   cohens_d_PRD_est <- c()
   for(way_of_administration in ways_of_administration) {
-    mean_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] 
-                                    - res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
-    var_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4] 
-                                    + res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1] 
-                                    - 2 * res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
+    mean_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$mean[2] - 
+                                    res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$mean[1]
+    var_baseline_change_control <- res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[4] + 
+                                   res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[1] - 
+                                   2 * res_list$PRD[[paste0(way_of_administration,"_Control")]]$response$sigma[2]
     
     cohens_d_PRD <- c(cohens_d_PRD,
                       sapply(res_list$PRD[grep(pattern=way_of_administration, 
@@ -64,12 +67,12 @@ operating_characteristics <- function(res_list){
     
   }
   
-  ocs <- merge(decisions, 
-               cbind(as.data.frame(cohens_d_TRD), 
-                     as.data.frame(cohens_d_TRD_est), 
-                     as.data.frame(cohens_d_PRD), 
+  ocs <- merge(cbind(decisions,
+                     as.data.frame(cohens_d_TRD), 
+                     as.data.frame(cohens_d_TRD_est)),
+               cbind(as.data.frame(cohens_d_PRD), 
                      as.data.frame(cohens_d_PRD_est)), 
-               by="row.names")
+               by="row.names", all = TRUE)
   rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
   ocs <- ocs[2:length(ocs)]
   
@@ -77,9 +80,16 @@ operating_characteristics <- function(res_list){
   n_TRD <- sapply(res_list$TRD, 
                   function(y) {nrow(y$data)})
   n_PRD <- sapply(res_list$PRD, 
-                  function(y) {nrow(y$data)})
-  n <- cbind(as.data.frame(n_TRD), 
-             as.data.frame(n_PRD))
+                  function(y) {
+                    ifelse(is.null(y$data), 
+                           NA, 
+                           nrow(y$data))
+                    })
+  n <- merge(as.data.frame(n_TRD),as.data.frame(n_PRD),
+             by="row.names", all = TRUE)
+  rownames(n) <- n$Row.names # merge() turns rownames into a new column "Row.names"
+  n <- n[2:length(n)]
+  
   ocs <- merge(ocs, 
                n, 
                by="row.names")
@@ -110,10 +120,14 @@ operating_characteristics <- function(res_list){
                                                           NA, 
                                                           y$endpoint$n_control)
                                         })
-  n_control_comparators <- cbind(as.data.frame(n_treatment_TRD), 
-                                 as.data.frame(n_treatment_PRD), 
-                                 as.data.frame(n_control_comparators_TRD), 
-                                 as.data.frame(n_control_comparators_PRD))
+  n_control_comparators <- merge(cbind(as.data.frame(n_treatment_TRD), 
+                                       as.data.frame(n_control_comparators_TRD)),
+                                 cbind(as.data.frame(n_treatment_PRD),
+                                       as.data.frame(n_control_comparators_PRD)),
+                                 by="row.names", all = TRUE)
+  rownames(n_control_comparators) <- n_control_comparators$Row.names # merge() turns rownames into a new column "Row.names"
+  n_control_comparators <- n_control_comparators[2:length(n_control_comparators)]
+                                 
   ocs <- merge(ocs, 
                n_control_comparators, 
                by="row.names")
@@ -123,30 +137,64 @@ operating_characteristics <- function(res_list){
   
   # duration of each arm
   first_timestamp_TRD <- sapply(res_list$TRD, 
-                                function(y) min(y$data[,3]))
+                                function(y) {
+                                  ifelse(is.null(y$data), 
+                                         NA, 
+                                         min(y$data[,3]))
+                                  })
   first_timestamp_PRD <- sapply(res_list$PRD, 
-                                function(y) min(y$data[,3]))
+                                function(y) 
+                                {
+                                  ifelse(is.null(y$data), 
+                                         NA, 
+                                         min(y$data[,3]))
+                                })
   last_timestamp_TRD <- sapply(res_list$TRD, 
-                               function(y) max(y$data[,3]))
+                               function(y) {
+                                 ifelse(is.null(y$data), 
+                                        NA, 
+                                        max(y$data[,3]))
+                               })
   last_timestamp_PRD <- sapply(res_list$PRD, 
-                               function(y) max(y$data[,3]))
-  last_timestamp <- cbind(as.data.frame(last_timestamp_TRD), 
-                          as.data.frame(last_timestamp_PRD))
-  first_timestamp <- cbind(as.data.frame(first_timestamp_TRD), 
-                           as.data.frame(first_timestamp_PRD))
-  duration_each_arm <- last_timestamp - first_timestamp
-  names(duration_each_arm) <- c("duration_TRD", "duration_PRD")
+                               function(y) {
+                                 ifelse(is.null(y$data), 
+                                        NA, 
+                                        max(y$data[,3]))
+                               })
   
-  ocs <- merge(ocs, 
-               cbind(duration_each_arm, 
+  duration_TRD <- last_timestamp_TRD - first_timestamp_TRD
+  duration_PRD <- last_timestamp_PRD - first_timestamp_PRD
+  
+  # mean number of active arms (patient level)
+  mean_active_arms_TRD <- sapply(res_list$TRD, 
+                                 function(y) {
+                                   ifelse(is.null(y$data),
+                                          NA, 
+                                          mean(y$data[,5]))
+                                 })
+  mean_active_arms_PRD <- sapply(res_list$PRD, 
+                                 function(y) {
+                                   ifelse(is.null(y$data),
+                                          NA, 
+                                          mean(y$data[,5]))
+                                 })
+
+  ocs <- merge(cbind(ocs,
+                     duration_TRD, 
                      first_timestamp_TRD, 
-                     last_timestamp_TRD, 
+                     last_timestamp_TRD,
+                     mean_active_arms_TRD),
+               cbind(duration_PRD,
                      first_timestamp_PRD, 
-                     last_timestamp_PRD), by="row.names")
+                     last_timestamp_PRD,
+                     mean_active_arms_PRD), 
+               by="row.names", all = TRUE)
   rownames(ocs) <- ocs$Row.names # merge() turns rownames into a new column "Row.names"
   ocs <- ocs[2:length(ocs)]
   
+
   
+
   return(ocs)
   
 }

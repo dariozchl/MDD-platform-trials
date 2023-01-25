@@ -8,6 +8,7 @@ make_decision_wrapper <- function(res_list,
                                   timestamp) { 
   for(population in 1:2){
     for(i in 1:length(ways_of_administration)){
+      # names of all treatment arms in the population
       arms_within_administration <- grep(ways_of_administration[i], 
                                          names(res_list[[population]]), 
                                          value=TRUE)[-1] # first one is always control, for which no decision should be made
@@ -38,7 +39,7 @@ make_decision_wrapper <- function(res_list,
                                                          "n_treatment"=output[[1]][[6]])
             res_list[[population]][[j]]$end_timestamp <- timestamp
             
-            # checks if at least n_fin people are already recruited
+            # checks if at least n_int people are already recruited
           } else if(nrow(res_list[[population]][[j]]$data) >= n_int[[population]] & 
                     res_list[[population]][[j]]$decision[1] == "none"){
             output <- make_decision_trial(res_list = res_list, 

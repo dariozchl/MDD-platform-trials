@@ -2,10 +2,13 @@
 #' Helper Function: Update Allocation Ratio
 #' @export
 update_alloc_ratio <- function(res_list, 
-                               ways_of_administration) {
+                               ways_of_administration,
+                               applicable_to_PRD,
+                               rand_type # "full", "block"
+                               ) {
   
   # the [-c(1:length(ways_of_administration))] drops the controls from the assessment, since controls are always "active"
-  cohorts_left <- coh_left_check(res_list)[-c(1:length(ways_of_administration)),] 
+  cohorts_left <- coh_left_check(res_list, applicable_to_PRD)[-c(1:length(ways_of_administration)),] 
   
   # initialize vector that will contain the number of active treatments per admin
   k_vector <- rep(0,length(ways_of_administration))
@@ -26,38 +29,48 @@ update_alloc_ratio <- function(res_list,
     
     # for all active admins and arms, we need to assign a specific allocation ratio
     if(length(active_admin) >= 1) {
-      for(i in 1:length(active_admin)){
-        
-        active_arms_in_admin_index <- grep(active_admin[i], 
-                                           ((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[cohorts_left[,population]])
-        active_arms_in_admin <- (((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[cohorts_left[,population]])[active_arms_in_admin_index]
-        
-        inactive_arms_in_admin_index <- grep(active_admin[i], 
-                                             ((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[!cohorts_left[,population]])
-        inactive_arms_in_admin <- (((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[!cohorts_left[,population]])[inactive_arms_in_admin_index]
-        
-        k <- length(active_arms_in_admin) # number of treatment arms (without control)
-        k_vector[which(ways_of_administration==active_admin[i])] <- k 
-        if(k >= 1){ # if there are active treatments
-          if(k>3){alloc_ratio <- c(0.35, rep(0.65/k,k))} else {
-            # standard 1:(1/sqrt(k)) allocation with cap at 0.35 to control
-            alloc_ratio <- c(1/sqrt(k), rep(1/k,k)) / sum(c(1/sqrt(k), rep(1/k,k)))} 
-          # writes allocation rate for control arms
-          res_list[[population]][[paste0(active_admin[i], "_Control")]]$alloc_ratio <- alloc_ratio[1]
-        } else { # if there is only control active
-          alloc_ratio <- 0
-        }
-        
-        if(length(active_arms_in_admin) >= 1){
-          for(j in active_arms_in_admin){
-            res_list[[population]][[j]]$alloc_ratio <- (alloc_ratio[-1])[which(j==active_arms_in_admin)]
+      if(rand_type == "full"){
+        for(i in 1:length(active_admin)){
+          # numbers of the active treatments in this way of administration
+          active_arms_in_admin_index <- grep(active_admin[i], 
+                                             ((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[cohorts_left[,population]])
+          # names of the active treatments in this way of administration
+          active_arms_in_admin <- (((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[cohorts_left[,population]])[active_arms_in_admin_index]
+          
+          inactive_arms_in_admin_index <- grep(active_admin[i], 
+                                               ((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[!cohorts_left[,population]])
+          inactive_arms_in_admin <- (((names(res_list[[population]]))[-c(1:length(ways_of_administration))])[!cohorts_left[,population]])[inactive_arms_in_admin_index]
+          
+          # number of treatment arms (without control)
+          k <- length(active_arms_in_admin) 
+          k_vector[which(ways_of_administration==active_admin[i])] <- k 
+          
+          ## here starts the allocation to arms
+          if(k >= 1){ # if there are active treatments
+            if(k>3){alloc_ratio <- c(0.35, rep(0.65/k,k))} else {
+              # standard 1:(1/sqrt(k)) allocation with cap at 0.35 to control
+              alloc_ratio <- c(1/sqrt(k), rep(1/k,k)) / sum(c(1/sqrt(k), rep(1/k,k)))} 
+            # writes allocation rate for control arms
+            res_list[[population]][[paste0(active_admin[i], "_Control")]]$alloc_ratio <- alloc_ratio[1]
+          } else { # if there is only control active
+            alloc_ratio <- 0
+          }
+          
+          if(length(active_arms_in_admin) >= 1){
+            for(j in active_arms_in_admin){
+              res_list[[population]][[j]]$alloc_ratio <- (alloc_ratio[-1])[which(j==active_arms_in_admin)]
+            }
+          }
+          if(length(inactive_arms_in_admin) >= 1){
+            for(j in inactive_arms_in_admin){
+              res_list[[population]][[j]]$alloc_ratio <- 0
+            }
           }
         }
-        if(length(inactive_arms_in_admin) >= 1){
-          for(j in inactive_arms_in_admin){
-            res_list[[population]][[j]]$alloc_ratio <- 0
-          }
-        }
+      }
+      
+      if(rand_type == "block"){
+        
       }
     }
       

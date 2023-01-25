@@ -20,11 +20,12 @@ create_cohort_initial <- function(cohorts_start,
   for(i in 1:length(ways_of_administration)){
     cohorts_start_TRD[[i]] <- cohorts_start_applic_to_TRD[[ways_of_administration[i]]]
     cohorts_start_PRD[[i]] <- cohorts_start_applic_to_PRD[[ways_of_administration[i]]]
+    # add name of the way of administration to the list
     names(cohorts_start_TRD)[i] <- paste0(ways_of_administration[i])
     names(cohorts_start_PRD)[i] <- paste0(ways_of_administration[i])
 
     cohorts_per_administration_TRD[[i]] <- rep(ways_of_administration[i], sum(cohorts_start_TRD[[i]]))
-    cohorts_per_administration_PRD[[i]] <- rep(ways_of_administration[i], sum(cohorts_start_PRD[[i]]))
+    cohorts_per_administration_PRD[[i]] <- rep(ways_of_administration[i], sum(cohorts_start_PRD[[i]])) # character(0) if no initial cohort
   }
 
   res_list <- list("TRD"=rep(list(c(list(decision = rep("none", 2), 
@@ -44,7 +45,8 @@ create_cohort_initial <- function(cohorts_start,
                                          response = NULL, 
                                          data = NULL, 
                                          n = NULL))),
-                             sum(unlist(cohorts_start_PRD))+length(ways_of_administration)))
+                             sum(unlist(cohorts_start_PRD))+length(ways_of_administration))
+                    )
 
   # naming the cohorts appropriately for both TRD and PRD
   for (i in 1:length(res_list$TRD)) {
@@ -58,8 +60,9 @@ create_cohort_initial <- function(cohorts_start,
                                        length(grep(name_placeholder, 
                                                    names(res_list$TRD)))+1) 
     }
-    res_list$TRD[[i]]$response <- treatment_effects$TRD[[paste(name_placeholder)]][[sample(
-      x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]]
+    # draw a random treatment effect, control effect is fixed
+    res_list$TRD[[i]]$response <- treatment_effects$TRD[[paste(name_placeholder)]][[
+      sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]]
   }
 
   for (i in 1:length(res_list$PRD)) {
@@ -73,8 +76,8 @@ create_cohort_initial <- function(cohorts_start,
                                        length(grep(name_placeholder, 
                                                    names(res_list$PRD)))+1) 
     }
-    res_list$PRD[[i]]$response <- treatment_effects$PRD[[paste(name_placeholder)]][[sample(
-      x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]]
+    res_list$PRD[[i]]$response <- treatment_effects$PRD[[paste(name_placeholder)]][[
+      sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]]
   }
 
   return(res_list)

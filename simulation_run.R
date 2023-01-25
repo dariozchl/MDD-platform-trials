@@ -69,7 +69,11 @@ prob_new_compound=c(0.2)
 
 # specify initial compounds per population
 cohorts_start_applic_to_TRD <- cohorts_start
-cohorts_start_applic_to_PRD <- cohorts_start
+applicable_to_PRD=FALSE
+cohorts_start_applic_to_PRD <- list("pill"=0)
+#cohorts_start_applic_to_PRD <- list("pill"=0, "IV"=0, "nasal"=0)
+#applicable_to_PRD=TRUE
+#cohorts_start_applic_to_PRD <- cohorts_start
 
 ################# SIMULATION ##################################################
 
@@ -81,14 +85,14 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 10
+nsim <- 10000
 sim_results <- NULL
 
-patients_per_timepoint = list(c(30,30))
+patients_per_timepoint = list(c(20,20))
 n_fin <- list(list("TRD"=40,"PRD"=40), 
-              #list("TRD"=60,"PRD"=60), 
-              #list("TRD"=80,"PRD"=80), 
-              #list("TRD"=100,"PRD"=100), 
+              list("TRD"=60,"PRD"=60), 
+              list("TRD"=80,"PRD"=80), 
+              list("TRD"=100,"PRD"=100), 
               list("TRD"=120,"PRD"=120))
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, 
                          "n_fin"=n_fin, 
@@ -102,12 +106,14 @@ for(i in 1:nrow(scenarios)){
                                          n_fin=scenarios$n_fin[[i]],
                                          treatment_effects=treatment_effects, 
                                          ways_of_administration=ways_of_administration,
-                                         cohorts_start_applic_to_TRD=cohorts_start,# 
-                                         cohorts_start_applic_to_PRD=cohorts_start,#
+                                         cohorts_start_applic_to_TRD=cohorts_start,
+                                         applicable_to_PRD=applicable_to_PRD,
+                                         cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
+                                         rand_type="full",
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          prob_new_compound=prob_new_compound,
-                                         max_treatments=c(8), 
+                                         max_treatments=c(6), 
                                          trial_end="timepoint", 
                                          latest_timepoint_treatment_added=60, 
                                          number_of_compounds_cap="global",
@@ -141,7 +147,7 @@ for(i in 1:nrow(scenarios)){
 stopCluster(cl)
 sim_results <- as_tibble(sim_results)
 
-write.xlsx(sim_results, "oneDomain.xlsx")
+write.xlsx(sim_results, "oneDomain_full.xlsx")
 #write.xlsx(sim_results, "threeDomains.xlsx")
 
-saveRDS(sim_results, "sim_results.rds")
+saveRDS(sim_results, "sim_results_oneDomain_full.rds")

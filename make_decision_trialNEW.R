@@ -25,7 +25,7 @@ make_decision_trial <- function(res_list,
   baseline_treat <- res_list[[which_pop]][[which_treat]]$data[,1]
   endpoint_treat <- res_list[[which_pop]][[which_treat]]$data[,1+which_measure]
   
- 
+  if(!is.null(baseline_treat)){
   # Placebo group
     if (control_type == "all") {
       baseline_contr <- res_list[[which_pop]][[control_needed]]$data[,1]
@@ -33,7 +33,9 @@ make_decision_trial <- function(res_list,
      }
     
     if (control_type == "concurrent") {
+      # grabs time points when patients were added to this specific treatment arm 
        conc_times <- unique(res_list[[which_pop]][[which_treat]]$data[,"timestamp"])
+       # grabs controls recruited at the same time points
        conc_controls <- res_list[[which_pop]][[control_needed]]$
                           data[which(res_list[[which_pop]][[control_needed]]$data[,"timestamp"]>=min(conc_times) 
                                    & res_list[[which_pop]][[control_needed]]$data[,"timestamp"]<=max(conc_times)),]
@@ -92,11 +94,11 @@ make_decision_trial <- function(res_list,
                                summary(model_freq)$coefficients["arm1",4]/2, 
                                1-summary(model_freq)$coefficients["arm1",4]/2)
     # two-sided confidence interval on level of the significance level at final analysis: one-sided alpha of 5% corresponds to two-sided 1-2*alpha, i.e. 90% CI 
-    conf_int <- unname(confint(model_freq, level = 1-2*p_val[2])["arm1",])
+    conf_int <- unname(confint(model_freq, level = 1-2*p_valUSE)["arm1",]) # p_val[2]
     # check whether the p-value is below threshold
     success_pval <- one_sided_pvalue < p_valUSE
   } else if(sided=="two_sided") {
-    conf_int <- unname(confint(model_freq, level = 1-p_val[2])["arm1",])
+    conf_int <- unname(confint(model_freq, level = 1-p_valUSE)["arm1",]) # p_val[2]
     success_pval <- (summary(model_freq)$coefficients["arm1",1] < 0) & 
                     (summary(model_freq)$coefficients["arm1",4] < p_valUSE)
   }
@@ -116,16 +118,18 @@ make_decision_trial <- function(res_list,
                      n_control = nrow(response_data[response_data$arm==0,]), 
                      n_treatment = nrow(response_data[response_data$arm==1,]))
    
-  }  
-if(test_type == "both"){
-  return(list(res_bayesLM, res_freqLM, cohensD))} else
-    if(test_type == "bayes"){
-      return(list(res_bayesLM, cohensD))
-    } else
-      if(test_type=="freq"){
-        return(list(res_freqLM, cohensD))}
+  }
   
-  
+  if(test_type == "both"){
+    return(list(res_bayesLM, res_freqLM, cohensD))} else
+      if(test_type == "bayes"){
+        return(list(res_bayesLM, cohensD))
+      } else
+        if(test_type=="freq"){
+          return(list(res_freqLM, cohensD))}
+}
+
+
 }
 
 # make_decision_trial(res_list = res_list, which_pop="PRD", 

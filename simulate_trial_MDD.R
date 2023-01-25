@@ -8,8 +8,10 @@ simulate_trial <- function(cohorts_start,
                            treatment_effects, 
                            ways_of_administration, 
                            cohorts_start_applic_to_TRD, #
+                           applicable_to_PRD,
                            cohorts_start_applic_to_PRD, #
                            sharing_type,
+                           rand_type, # type of randomization
                            patients_per_timepoint, 
                            prob_new_compound, 
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
@@ -35,7 +37,7 @@ simulate_trial <- function(cohorts_start,
                                     treatment_effects=treatment_effects, 
                                     ways_of_administration=ways_of_administration,
                                     cohorts_start_applic_to_TRD=cohorts_start, #
-                                    cohorts_start_applic_to_PRD=cohorts_start  #
+                                    cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD  #
                                     )
 
   Total_N_Vector <- NULL
@@ -55,13 +57,14 @@ simulate_trial <- function(cohorts_start,
                                    trial_end=trial_end, 
                                    timestamp=timestamp, 
                                    latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
-                                   ways_of_administration=ways_of_administration) 
+                                   ways_of_administration=ways_of_administration,
+                                   applicable_to_PRD=applicable_to_PRD) 
     
     # some arms may have been added, so check again which cohorts are recruiting.
-    cohorts_left <- coh_left_check(x=res_list) 
+    cohorts_left <- coh_left_check(x=res_list, applicable_to_PRD=applicable_to_PRD) 
     
     # update allocation ratio
-    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration) 
+    res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration, applicable_to_PRD, rand_type) 
     
     # sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD
@@ -85,7 +88,10 @@ simulate_trial <- function(cohorts_start,
       
       # sample from multinomial distribution with size of available patients how many patients are allocated to each treatment arm
       # with probability derived from the allocation ratios within and across each way of administration
-      if(sum(all_alloc_ratios * all_prob_admins) > 0){ 
+      
+      ########### here allocation to treatmentarms! can be really uneven
+      # as.numeric in case of no PRD population (named list())
+      if(sum(as.numeric(all_alloc_ratios) * as.numeric(all_prob_admins)) > 0){ 
         # allocate all available patients according to the probability all_alloc_ratios * all_prob_admins
         n_all_arms <- rmultinom(n=1, 
                                 size=n[population], 
@@ -100,6 +106,7 @@ simulate_trial <- function(cohorts_start,
         # If there were treatment1 and treatment10, then "treatment1" would be found twice.
         n_arm <- n_all_arms[grep(paste0("^", i, "$"), 
                                  rownames(n_all_arms))] 
+        #response probability for the specific arm
         response <- res_list[[population]][[i]]$response
         
         if(n_arm >= 1){
@@ -109,7 +116,7 @@ simulate_trial <- function(cohorts_start,
           draw <- cbind(draw, 
                         timestamp, 
                         time_periode,
-                        "active_arms"=sum(cohorts_left[,population]==TRUE)) 
+                        "active_arms"=sum(cohorts_left[,population]==TRUE)-length(ways_of_administration)) 
           res_list[[population]][[i]]$data <- rbind(res_list[[population]][[i]]$data, draw)
         }
       }
@@ -125,7 +132,7 @@ simulate_trial <- function(cohorts_start,
                                       n_int=n_int, 
                                       timestamp=timestamp)
     
-    if(all(colSums(coh_left_check(res_list)) == length(ways_of_administration)) & 
+    if(all(colSums(coh_left_check(res_list, applicable_to_PRD)) <= length(ways_of_administration)) & 
        timestamp>=latest_timepoint_treatment_added){trial_stop=TRUE}
 
     print(timestamp)
