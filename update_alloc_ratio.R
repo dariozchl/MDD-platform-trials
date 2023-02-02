@@ -3,8 +3,7 @@
 #' @export
 update_alloc_ratio <- function(res_list, 
                                ways_of_administration,
-                               applicable_to_PRD,
-                               rand_type # "full", "block"
+                               applicable_to_PRD
                                ) {
   
   # the [-c(1:length(ways_of_administration))] drops the controls from the assessment, since controls are always "active"
@@ -29,7 +28,6 @@ update_alloc_ratio <- function(res_list,
     
     # for all active admins and arms, we need to assign a specific allocation ratio
     if(length(active_admin) >= 1) {
-      if(rand_type == "full"){
         for(i in 1:length(active_admin)){
           # numbers of the active treatments in this way of administration
           active_arms_in_admin_index <- grep(active_admin[i], 
@@ -67,11 +65,6 @@ update_alloc_ratio <- function(res_list,
             }
           }
         }
-      }
-      
-      if(rand_type == "block"){
-        
-      }
     }
       
     # set allocation ratio across domains relative to number of treatment arms and control size

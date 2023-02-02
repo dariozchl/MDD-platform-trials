@@ -8,6 +8,7 @@ source("coh_left_check.R")
 source("check_new_compound.R")
 source("total_n.R")
 source("update_alloc_ratio.R")
+source("block_rand.R")
 source("create_cohort_new.R")
 source("make_decision_trialNEW.R")
 source("make_decision_wrapper.R")
@@ -60,11 +61,12 @@ treatment_effects <- list(
 # specify cohorts and initial compounds
 ways_of_administration=c("pill")
 #ways_of_administration=c("pill", "nasal", "IV")
-cohorts_start <- list("pill"=3)
+cohorts_start <- list("pill"=6)
 #cohorts_start <- list("pill"=3, "IV"=1, "nasal"=1)
+rand_type="block"
 
 # specify probability of a new treatment becoming available per way of administration
-prob_new_compound=c(0.2)
+prob_new_compound=c(1)
 #prob_new_compound=c(0.2,0.1,0.1)
 
 # specify initial compounds per population
@@ -85,24 +87,25 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 10000
+nsim <- 10
 sim_results <- NULL
 
 patients_per_timepoint = list(c(20,20))
-n_fin <- list(list("TRD"=40,"PRD"=40), 
-              list("TRD"=60,"PRD"=60), 
-              list("TRD"=80,"PRD"=80), 
-              list("TRD"=100,"PRD"=100), 
-              list("TRD"=120,"PRD"=120))
+n_fin <- list(#list("TRD"=40,"PRD"=40), 
+              #list("TRD"=60,"PRD"=60), 
+              list("TRD"=80,"PRD"=80)#, 
+              #list("TRD"=100,"PRD"=100), 
+              #list("TRD"=120,"PRD"=120)
+              )
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, 
                          "n_fin"=n_fin, 
-                         "pvals"=list(c(0.5,0.1)))
+                         "pvals"=list(c(2,0.1)))
 
 
 for(i in 1:nrow(scenarios)){
   sim_results_tmp <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
     single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
-                                         n_int=lapply(scenarios$n_fin[[i]], function(x) x/2), 
+                                         n_int=lapply(scenarios$n_fin[[i]], function(x) x*2), 
                                          n_fin=scenarios$n_fin[[i]],
                                          treatment_effects=treatment_effects, 
                                          ways_of_administration=ways_of_administration,
@@ -110,7 +113,7 @@ for(i in 1:nrow(scenarios)){
                                          applicable_to_PRD=applicable_to_PRD,
                                          cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
-                                         rand_type="full",
+                                         rand_type="block",
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          prob_new_compound=prob_new_compound,
                                          max_treatments=c(6), 
@@ -147,7 +150,7 @@ for(i in 1:nrow(scenarios)){
 stopCluster(cl)
 sim_results <- as_tibble(sim_results)
 
-write.xlsx(sim_results, "oneDomain_full.xlsx")
-#write.xlsx(sim_results, "threeDomains.xlsx")
+write.xlsx(sim_results, "block.xlsx")
+#write.xlsx(sim_results, "threeDomains_full_20.xlsx")
 
-saveRDS(sim_results, "sim_results_oneDomain_full.rds")
+#saveRDS(sim_results, "sim_results_oneDomain_nofut_20.rds")
