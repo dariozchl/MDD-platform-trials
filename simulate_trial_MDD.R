@@ -40,10 +40,11 @@ simulate_trial <- function(cohorts_start,
                                     cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD
                                     )
 
-  Total_N_Vector <- NULL
+  TOTAL_N <- total_n(res_list)
+  #Total_N_Vector <- NULL
   timestamp <- 0
-  time_periode <- 0
-  remove_compound <<- FALSE
+  time_period <- 0
+  remove_compound <<- TRUE
 
   ##### Running Simulations #####
   while (!trial_stop) {
@@ -66,7 +67,33 @@ simulate_trial <- function(cohorts_start,
     # update time stamps here since new patients were just recruited
     timestamp <- timestamp + 1
     if(add_compound == TRUE || remove_compound == TRUE){
-      time_periode <- time_periode + 1
+      time_period <- time_period + 1
+      
+      #initialize a list with sample sizes for each population and way of administration in this time period
+      n_period <- list("TRD"=rep(list(0),
+                                  length(ways_of_administration)+1),
+                       "PRD"=rep(list(0),
+                                  length(ways_of_administration)+1)
+      )
+      # name the list entries
+      for (i in 1:length(ways_of_administration)) {
+        names(n_period$TRD)[i] <- ways_of_administration[i]
+        names(n_period$TRD)[length(ways_of_administration)+1] <- "total"
+        names(n_period$PRD)[i] <- ways_of_administration[i]
+        names(n_period$PRD)[length(ways_of_administration)+1] <- "total"
+      }
+      
+      # generate new block randomization list whenever a treatment enters of leaves the platform
+      if(rand_type != "full"){
+        # generate new rand_list
+        rand_list <- generate_rand_list(res_list,
+                                        n_fin,
+                                        ways_of_administration,
+                                        applicable_to_PRD,
+                                        rand_type
+                                        )
+                           
+      } # end rand_list
     }
     remove_compound <<- FALSE
     
@@ -113,7 +140,7 @@ simulate_trial <- function(cohorts_start,
                             sigma=response$sigma)
             draw <- cbind(draw, 
                           timestamp, 
-                          time_periode,
+                          time_period,
                           "active_arms"=sum(cohorts_left[,population]==TRUE)-length(ways_of_administration),
                           "active_arms_admin"= length(grep(gsub(pattern = "_.*", "",i),
                                                            rownames(n_all_arms))) - 1
@@ -124,17 +151,41 @@ simulate_trial <- function(cohorts_start,
       } 
       
     } else{ # block randomization
-      res_list <- update_alloc_ratio_block(res_list,
-                                           n, 
-                                           ways_of_administration,
-                                           applicable_to_PRD,
-                                           timestamp, 
-                                           time_periode, 
-                                           rand_type)
-                                             
-    }
+      for(population in 1:2){
+        if(sum(cohorts_left[population]==TRUE)-1>0){
+          for (i in 1:n[population]) {
+            # increase count of patients in this period
+            n_period[[population]]$total <- n_period[[population]]$total+1
+            # patient i is randomized to which way of administration
+            which_admin <- rand_list[[population]][[length(ways_of_administration)+1]][n_period[[population]]$total]
+            # gets position of the number of patients in this admin in n_period
+            pos1 <- grep(which_admin, names(n_period[[population]]))
+            # increase count of patients in this way of administration in this period
+            n_period[[population]][[pos1]] <- n_period[[population]][[pos1]] +1
+            
+            # get position of the randomization list for this way of administration in rand_list
+            pos2 <- grep(which_admin, names(rand_list[[population]]))
+            which_treatment <- rand_list[[population]][[pos2]][n_period[[population]][[pos1]]]
+            
+            #response probability for the specific arm
+            response <- res_list[[population]][[which_treatment]]$response
+            
+            #draw a response
+            draw <- rmvnorm(n=1,
+                            mean=response$mean, 
+                            sigma=response$sigma)
+            draw <- cbind(draw, 
+                          timestamp, 
+                          time_period,
+                          "active_arms"=sum(cohorts_left[,population]==TRUE)-length(ways_of_administration),
+                          "active_arms_admin"=length(unique(rand_list[[population]][[pos2]]))-1) 
+            # add response to the data list in this treatment
+            res_list[[population]][[which_treatment]]$data <- rbind(res_list[[population]][[which_treatment]]$data, draw)
+          }
+        }
+      }
+    } # end else (block)
     
-      
     TOTAL_N <- total_n(res_list)
     
     res_list <- make_decision_wrapper(res_list=res_list, 

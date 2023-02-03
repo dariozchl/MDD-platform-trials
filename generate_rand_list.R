@@ -1,23 +1,35 @@
 
-update_alloc_ratio_block <- function(res_list,
-                                     n,
-                                     ways_of_administration,
-                                     applicable_to_PRD,
-                                     timestamp=0, 
-                                     time_periode=0,
-                                     rand_type="block" # "block", "block_1", "block_k", "block_sqrt"
-                                     ) {
+# generates a randomization list for the different methods of allocation "block", "block_1", "block_k", "block_sqrt"
+# returns object rand list
+generate_rand_list <- function(res_list,
+                               n_fin,
+                               ways_of_administration,
+                               applicable_to_PRD,
+                               rand_type="block" # "block", "block_1", "block_k", "block_sqrt"
+                               ) {
+  
+  #initialize a list with randomization lists for each population and way of administration
+  rand_list <- list("TRD"=rep(list(NA),
+                              length(ways_of_administration)+1),
+                    "PRD"=rep(list(NA),
+                              length(ways_of_administration)+1)
+  )
+  # name the list entries
+  for (i in 1:length(ways_of_administration)) {
+    names(rand_list$TRD)[i] <- ways_of_administration[i]
+    names(rand_list$TRD)[length(ways_of_administration)+1] <- "admin"
+    names(rand_list$PRD)[i] <- ways_of_administration[i]
+    names(rand_list$PRD)[length(ways_of_administration)+1] <- "admin"
+  }
   
   cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
   # the [-c(1:length(ways_of_administration))] drops the controls from the assessment, since controls are always "active"
   treatments_left <- coh_left_check(res_list, applicable_to_PRD)[-c(1:length(ways_of_administration)),] 
-  # initialize vector that will contain the number of active treatments per admin
-  #k_vector <- rep(0,length(ways_of_administration))
-  
+
   for(population in 1:2){
     # names of currently active ways of administration
     active_admin <- unique(gsub(pattern="_.*", "", (rownames(treatments_left))[(treatments_left[,population])]))
-    # only counts treatments without control
+    # counts treatments without control
     active_admin_rep <- table(gsub(pattern="_.*", "", (rownames(treatments_left))[(treatments_left[,population])]))
     number_of_active_admin <- length(active_admin)
     
@@ -43,17 +55,19 @@ update_alloc_ratio_block <- function(res_list,
         ratio_admin <- sapply(X=n_treatments_per_domain,FUN=function(x) x+max(sqrt(x), x*0.35/(1-0.35)))
       }
       
-      # if sqrt
+      # relevant if sqrt is used
       ratio_admin_modified <- ratio_admin
       # the non-integer parts of the allocation rate
       # equals probability to include an additional control patient in the block
       prob_include_admin <- ratio_admin-floor(ratio_admin)
       
-      # more than n entries should be generated
-      rep_admin_block <- ceiling(n[population]/sum(floor(ratio_admin)))
+      # how many blocks should be generated
+      # number of blocks in the administration * max number of concurrent arms(+control) * number of ways of administration
+      rep_admin_block <- (n_fin[[population]]*1.2)*10*length(ways_of_administration)
+      # more than n entries should be generated <- ceiling(n[population]/sum(floor(ratio_admin)))
       # initialize randomization list to the administrations
       rand_admin <- c()
-      for (i in 1:rep_admin_block) {
+      for (rep in 1:rep_admin_block) {
         # checks if an additional control patient is added to the block length in case of non-integer ratios
         add_patients <- as.integer(runif(length(active_admin), 0, 1)<=prob_include_admin)
         # rounds control ratio up or down in case of non-integer ratios, else it leaves the ratio the same
@@ -64,15 +78,13 @@ update_alloc_ratio_block <- function(res_list,
         # add to existing randomization list to administration
         rand_admin <- c(rand_admin, rand_block)
       }
-      # [1:n] only grabs the ones we need
-      n_admins <- table(rand_admin[1:n[population]]) 
       
+      # writes the generated randomization list for the ways of administration in rand_list
+      rand_list[[population]][[length(ways_of_administration)+1]] <- rand_admin
+
       ## allocate patients to treatment arms within one way of administration
       for(i in 1:number_of_active_admin){
-        
-        # grab number of patients that were randomized to this way of administration
-        n_admin <- n_admins[active_admin[i]]
-        
+
         # indices of the currently recruiting arms in this way of administration
         active_arms_in_admin_index <- grep(active_admin[i],
                                            ((names(res_list[[population]])))[cohorts_left[,population]])
@@ -97,18 +109,20 @@ update_alloc_ratio_block <- function(res_list,
         # first element allocatio ratio to control, rest for active treatments
         ratio_alloc <- c(control_ratio,rep(1, k))
         
-        # if sqrt
+        # relevant if sqrt is used
         ratio_alloc_modified <- ratio_alloc
         # the non-integer part of the allocation rate to control
         # equals probability to include an additional control patient in the block
         prob_include <- sum(ratio_alloc)-floor(sum(ratio_alloc))
         
-        # more than n_admin entries should be generated
-        rep_block <- ceiling(n_admin/sum(ratio_alloc))
+        # how many blocks should be generated
+        # in each block one patient is allocated to each treatment, so after n_fin blocks at least one arm should finish recruiting
+        # in case of overrunning *1.2
+        rep_block <- n_fin[[population]]*1.2
         # initialize randomization list to arms within one administration
-        rand_list <- c()
+        rand_arm <- c()
         
-        for (i in 1:rep_block) {
+        for (rep in 1:rep_block) {
           # checks if an additional control patient is added to the block length in case of non-integer ratios
           add_control <- as.integer(runif(1, 0, 1)<=prob_include)
           # rounds control ratio up or down in case of non-integer ratios, else it leaves the ratio the same
@@ -117,39 +131,17 @@ update_alloc_ratio_block <- function(res_list,
           # samples one block
           rand_block <- sample(rep(active_arms_in_admin, ratio_alloc))
           # adds this block to the randomization list
-          rand_list<- c(rand_list,rand_block)
+          rand_arm<- c(rand_arm,rand_block)
         }
         
-        # [1:n] only grab the ones we need
-        n_all_arms <- as.data.frame(table(rand_list[1:n[population]])) # turns rownames into a new column "Var1"
-        rownames(n_all_arms) <- n_all_arms$Var1 
-        n_all_arms <- n_all_arms[2:length(n_all_arms)]
+        # writes the generates randomization list for this arm in rand_list
+        # active_admin[i] is the name of the currently relevant domain, grep gives the position in the rand_list
+        rand_list[[population]][[grep(gsub(pattern = "_.*", "",active_admin[i]),names(rand_list[[population]]))]] <- rand_arm
         
-        # get responses for the allocated number of patients per arm
-        for (i in row.names(n_all_arms)) {
-          # ^ asserts that we are at the start. $ asserts that we are at the end. 
-          # If there were treatment1 and treatment10, then "treatment1" would be found twice.
-          n_arm <- n_all_arms[grep(paste0("^", i, "$"), 
-                                   rownames(n_all_arms)),1] 
-          #response probability for the specific arm
-          response <- res_list[[population]][[i]]$response
-          
-          if(n_arm >= 1){
-            draw <- rmvnorm(n=n_arm, 
-                            mean=response$mean, 
-                            sigma=response$sigma)
-            draw <- cbind(draw, 
-                          timestamp, 
-                          time_periode,
-                          "active_arms"=sum(n_treatments_per_domain),
-                          "active_arms_admin"=k) 
-            res_list[[population]][[i]]$data <- rbind(res_list[[population]][[i]]$data, draw)
-          }
-        }
       }
     } # end if open admins
   }
   
-  return(res_list)
+  return(rand_list)
 }
-    
+
