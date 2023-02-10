@@ -63,7 +63,8 @@ generate_rand_list <- function(res_list,
       
       # how many blocks should be generated
       # number of blocks in the administration * max number of concurrent arms(+control) * number of ways of administration
-      rep_admin_block <- (n_fin[[population]]*1.2)*10*length(ways_of_administration)
+      ##rep_admin_block <- (n_fin[[population]]*1.2)*10*length(ways_of_administration)
+      rep_admin_block <- 500*2
       # more than n entries should be generated <- ceiling(n[population]/sum(floor(ratio_admin)))
       # initialize randomization list to the administrations
       rand_admin <- c()
@@ -118,7 +119,8 @@ generate_rand_list <- function(res_list,
         # how many blocks should be generated
         # in each block one patient is allocated to each treatment, so after n_fin blocks at least one arm should finish recruiting
         # in case of overrunning *1.2
-        rep_block <- n_fin[[population]]*1.2
+        #####rep_block <- n_fin[[population]]*1.2
+        rep_block <- 145*2
         # initialize randomization list to arms within one administration
         rand_arm <- c()
         

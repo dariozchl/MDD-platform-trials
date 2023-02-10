@@ -3,10 +3,10 @@
 # library(HDInterval)
 
 make_decision_trial <- function(res_list, 
-                                #which_pop=c("TRD","PRD"), 
-                                which_pop,
-                                #which_admin=c("pill","nasal","IV"),
-                                which_admin=ways_of_administration,
+                                which_pop=c("TRD","PRD"), 
+                                #which_pop,
+                                which_admin=c("pill","nasal","IV"),
+                                #which_admin=ways_of_administration,
                                 which_treat, 
                                 which_measure = c(1,2),
                                 test_type = c("freq","bayes","both"), 
@@ -49,6 +49,8 @@ make_decision_trial <- function(res_list,
                   ((length(endpoint_treat)-1)*sd(baseline_treat-endpoint_treat))) / 
                  (length(endpoint_contr)+length(endpoint_treat)-2))
 
+  # a common data frame with the relevant treatment and control data
+  # 0 in column 3 marks control entries, 1 marks treatment entries
   response_data <- data.frame(baseline = c(baseline_treat, baseline_contr),
                               endpoint = c(endpoint_treat, endpoint_contr),
                               arm = factor(c(rep(1,length(endpoint_treat)),
@@ -84,7 +86,8 @@ make_decision_trial <- function(res_list,
     } else {
       p_valUSE <- p_val[2]
     }
-    
+  
+  # fit the model  
   model_freq <- lm(endpoint ~ baseline + arm, data=response_data)
   
   if(sided=="one_sided"){
@@ -94,11 +97,12 @@ make_decision_trial <- function(res_list,
                                summary(model_freq)$coefficients["arm1",4]/2, 
                                1-summary(model_freq)$coefficients["arm1",4]/2)
     # two-sided confidence interval on level of the significance level at final analysis: one-sided alpha of 5% corresponds to two-sided 1-2*alpha, i.e. 90% CI 
-    conf_int <- unname(confint(model_freq, level = 1-2*p_valUSE)["arm1",]) # p_val[2]
+    conf_int <- unname(confint(model_freq, level = 1-2*p_val[2])["arm1",]) # p_val[2]
     # check whether the p-value is below threshold
     success_pval <- one_sided_pvalue < p_valUSE
   } else if(sided=="two_sided") {
-    conf_int <- unname(confint(model_freq, level = 1-p_valUSE)["arm1",]) # p_val[2]
+    # 5% and 95%
+    conf_int <- unname(confint(model_freq, level = 1-p_val[2])["arm1",]) # p_val[2]
     success_pval <- (summary(model_freq)$coefficients["arm1",1] < 0) & 
                     (summary(model_freq)$coefficients["arm1",4] < p_valUSE)
   }
@@ -116,8 +120,8 @@ make_decision_trial <- function(res_list,
                                        ifelse(success_pval==FALSE, "failure", "success")),
                      n_tested = nrow(response_data), 
                      n_control = nrow(response_data[response_data$arm==0,]), 
-                     n_treatment = nrow(response_data[response_data$arm==1,]))
-   
+                     n_treatment = nrow(response_data[response_data$arm==1,])
+                     )
   }
   
   if(test_type == "both"){
@@ -127,7 +131,7 @@ make_decision_trial <- function(res_list,
       } else
         if(test_type=="freq"){
           return(list(res_freqLM, cohensD))}
-}
+} # end !is.null
 
 
 }

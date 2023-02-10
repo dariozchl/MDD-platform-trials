@@ -15,9 +15,9 @@ simulate_trial <- function(cohorts_start,
                            patients_per_timepoint, 
                            prob_new_compound, 
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
-                           trial_end, # can be either "pipeline" or "timepoint"
                            number_of_compounds_cap, # can either be "separate" or "global"
-                           pipeline_size, 
+                           trial_end, # can be either "pipeline" or "timepoint"
+                           #pipeline_size, 
                            latest_timepoint_treatment_added, # must always be specified to avoid running forever
                            p_val_interim, 
                            p_val_final, 
@@ -104,7 +104,7 @@ simulate_trial <- function(cohorts_start,
     
     if(rand_type == "full"){
       # update allocation ratio before allocating patients to arms
-      res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration, applicable_to_PRD) 
+      res_list <- update_alloc_ratio(res_list, ways_of_administration=ways_of_administration, applicable_to_PRD=applicable_to_PRD) 
       
       for(population in 1:2){
         # get vectors with allocation ratios within domain and allocation ratios for each domain
@@ -127,6 +127,7 @@ simulate_trial <- function(cohorts_start,
         # get responses for the allocated number of patients per arm
         for (i in row.names(n_all_arms)) {
           
+          # gets the relevant number of patents from the vector n_all_arms
           # ^ asserts that we are at the start. $ asserts that we are at the end. 
           # If there were treatment1 and treatment10, then "treatment1" would be found twice.
           n_arm <- n_all_arms[grep(paste0("^", i, "$"), 
@@ -199,8 +200,9 @@ simulate_trial <- function(cohorts_start,
     if(all(colSums(coh_left_check(res_list, applicable_to_PRD)) <= length(ways_of_administration)) & 
        timestamp>=latest_timepoint_treatment_added){trial_stop=TRUE}
     
+    print(timestamp)
   } # end !trial_stop
-  print(timestamp)  
+    
   return(res_list)
 
 }

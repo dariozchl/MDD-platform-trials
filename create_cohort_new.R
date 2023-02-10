@@ -12,6 +12,7 @@ create_cohort_new <- function(res_list,
                               timestamp=timestamp) {
 
 
+  # admin_Treatment without number
   name_placeholder <- paste0(way_of_administration,"_Treatment") # required for randomly drawing response
 
   if(applicable_to_TRD){
@@ -19,9 +20,13 @@ create_cohort_new <- function(res_list,
                           alloc_ratio = NULL, 
                           n_thresh = NULL, 
                           start_timestamp = timestamp,
-                          response = treatment_effects$TRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]],
+                          end_timestamp = NULL,
+                          response = treatment_effects$TRD[[paste(name_placeholder)]][[
+                                                            #sample position in list with possible effects
+                                                            sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)
+                                                            ]],
                           data = NULL,
-                          n = rep(NA, length(res_list$TRD[[paste0(way_of_administration, "_Control")]]$n))
+                          n = NULL #rep(NA, length(res_list$TRD[[paste0(way_of_administration, "_Control")]]$n))
                           ))
     
     # assign name to the new treatment: find highest already existing treatment index among this way of administration and add +1
@@ -43,9 +48,12 @@ create_cohort_new <- function(res_list,
                           alloc_ratio = NULL, 
                           n_thresh = NULL, 
                           start_timestamp = timestamp,
-                          response = treatment_effects$PRD[[paste(name_placeholder)]][[sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]],
+                          end_timestamp = NULL,
+                          response = treatment_effects$PRD[[paste(name_placeholder)]][[
+                                                            sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)
+                                                            ]],
                           data = NULL,
-                          n = rep(NA, length(res_list$PRD[[paste0(way_of_administration, "_Control")]]$n))
+                          n = NULL #rep(NA, length(res_list$PRD[[paste0(way_of_administration, "_Control")]]$n))
     ))
     
     res_list$PRD <- c(res_list$PRD, new_list_PRD)

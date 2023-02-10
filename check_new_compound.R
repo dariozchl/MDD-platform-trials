@@ -67,7 +67,7 @@ check_new_compound <- function(res_list,
                            prob = c(prob_new_compound, 
                                     1-sum(prob_new_compound)))
     
-    # counts how many treatments per admin are active either in PRD or in TRD. length(ways_of_administration) to get rid of controls
+    # counts how many treatments are active in total either in PRD or in TRD. length(ways_of_administration) to get rid of controls
     current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration) 
     
     add_compound <<- (new_compound != "none") & 
