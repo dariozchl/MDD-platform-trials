@@ -9,7 +9,8 @@ make_decision_trial <- function(res_list,
                                 #which_admin=ways_of_administration,
                                 which_treat, 
                                 which_measure = c(1,2),
-                                test_type = c("freq","bayes","both"), 
+                                test_type = c("freq","bayes","both"),
+                                ancova_period = FALSE,
                                 interim = FALSE,
                                 control_type = c("all", "concurrent"),
                                 hdi_perc = NULL, 
@@ -24,12 +25,14 @@ make_decision_trial <- function(res_list,
   # Treatment group difference
   baseline_treat <- res_list[[which_pop]][[which_treat]]$data[,1]
   endpoint_treat <- res_list[[which_pop]][[which_treat]]$data[,1+which_measure]
+  period_treat <- res_list[[which_pop]][[which_treat]]$data[,4]
   
   if(!is.null(baseline_treat)){
   # Placebo group
     if (control_type == "all") {
       baseline_contr <- res_list[[which_pop]][[control_needed]]$data[,1]
       endpoint_contr <- res_list[[which_pop]][[control_needed]]$data[,1+which_measure]
+      period_contr <- res_list[[which_pop]][[control_needed]]$data[,4]
      }
     
     if (control_type == "concurrent") {
@@ -41,6 +44,7 @@ make_decision_trial <- function(res_list,
                                    & res_list[[which_pop]][[control_needed]]$data[,"timestamp"]<=max(conc_times)),]
        baseline_contr <- conc_controls[,1]
        endpoint_contr <- conc_controls[,1+which_measure]
+       period_contr <- conc_controls[,4]
        }
     
   #calculation of effect estimate
@@ -53,6 +57,7 @@ make_decision_trial <- function(res_list,
   # 0 in column 3 marks control entries, 1 marks treatment entries
   response_data <- data.frame(baseline = c(baseline_treat, baseline_contr),
                               endpoint = c(endpoint_treat, endpoint_contr),
+                              period = c(period_treat, period_contr),
                               arm = factor(c(rep(1,length(endpoint_treat)),
                                              rep(0,length(endpoint_contr)))))
   
@@ -87,8 +92,15 @@ make_decision_trial <- function(res_list,
       p_valUSE <- p_val[2]
     }
   
-  # fit the model  
-  model_freq <- lm(endpoint ~ baseline + arm, data=response_data)
+  # fit the model
+    if(ancova_period==TRUE){
+      # include time period as a covariate
+      model_freq <- lm(endpoint ~ baseline + period + arm, data=response_data)
+    } else if(ancova_period==FALSE){
+      # only baseline as covariate
+      model_freq <- lm(endpoint ~ baseline + arm, data=response_data)
+    }
+  
   
   if(sided=="one_sided"){
     # if estimate <0, then the treatment arm has a favorable effect

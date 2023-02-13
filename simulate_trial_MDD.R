@@ -20,7 +20,8 @@ simulate_trial <- function(cohorts_start,
                            #pipeline_size, 
                            latest_timepoint_treatment_added, # must always be specified to avoid running forever
                            p_val_interim, 
-                           p_val_final, 
+                           p_val_final,
+                           ancova_period, # TRUE (including time period as covariate) or FALSE
                            sided) {
 
   ##### Initialization #####
@@ -191,7 +192,8 @@ simulate_trial <- function(cohorts_start,
     
     res_list <- make_decision_wrapper(res_list=res_list, 
                                       p_val_final=p_val_final, 
-                                      p_val_interim=p_val_interim, 
+                                      p_val_interim=p_val_interim,
+                                      ancova_period = ancova_period,
                                       sided=sided, 
                                       n_fin=n_fin, 
                                       n_int=n_int, 

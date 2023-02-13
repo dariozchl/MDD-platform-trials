@@ -11,7 +11,7 @@ sim_results_7 <- sim_results %>% filter(patients_per_timepoint==7)
 ####################### SAMPLE SIZES ###########################################
 
 # analyse patients needed per platform with regard to the allocation method
-n_perPlatform <- sim_results_7 %>% select(nsim, rand_type, admin, n_TRD) %>% 
+n_perPlatform <- sim_results_1 %>% select(nsim, rand_type, admin, n_TRD) %>% 
   mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
                                                 "block_sqrt",
                                                 "block",
@@ -40,6 +40,7 @@ ggplot(n_perPlatform,
            y=Allocation)) +
   scale_y_discrete(labels=c("block_1"="1:1", "block_k"="1:k", "block_sqrt"="1:sqrt(k)")) +
   geom_boxplot(fill="#69b3a2") +
+  xlim(1400, 2500)+
   coord_flip() +
   xlab("Sample size per platform") + ylab("Allocation method") +
   ggtitle("Size of platform trial") +
@@ -48,7 +49,7 @@ ggsave("SampleSize_withBoxes.tiff", device = "tiff", width=7, height=4)
 
 ########## NUMBER OF CONTROLS
 
-tibble_n_control_platform <- sim_results_7 %>% 
+tibble_n_control_platform <- sim_results_1 %>% 
   filter(treatment_ID == "Control") %>% 
   select(nsim, rand_type, n_TRD) %>% 
   mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
@@ -86,7 +87,7 @@ ggplot(tibble_ctrlAndTotal, aes(x = size, y = Allocation,
   theme_bw()
 ggsave("Control_and_total.tiff", device = "tiff", width=7, height=4)
 
-tibble_n_onTreatment <- sim_results_7 %>% filter(treatment_ID != "Control") %>% 
+tibble_n_onTreatment <- sim_results_1 %>% filter(treatment_ID != "Control") %>% 
   select(nsim, rand_type, admin, n_TRD) %>% 
   mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
                                                 "block_sqrt",
@@ -106,14 +107,44 @@ ggplot(tibble_ctrlAndTreatments, aes(x = size, y = Allocation,
   geom_boxplot(width=0.5, #outlier.shape = NA, 
                position=position_dodge(width=0), #coef=0
   )  +
-  stat_summary(fun = median,
-               geom = "line",
-               aes(group=type))+
-  xlim(0, 3250) +
+  xlim(0, 2500) +
   xlab("Sample size in platform") + ylab("Allocation method") +
   ggtitle("Sample size of the complete platform trial and the overall treatments and controls") +
   theme_bw()
 ggsave("Control_treatment_and_total.tiff", device = "tiff", width=9, height=4)
+
+####### ON TRIAL LEVEL
+tibble_trial_level <- sim_results_alloc %>% 
+  mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
+                                                "block_sqrt",
+                                                "block",
+                                                "full"))) %>%
+  filter(treatment_ID != "Control") %>%
+  select(nsim, Allocation, n_TRD, n_control_comparators_TRD)
+
+# on active treatment
+ggplot(tibble_trial_level, aes(x=n_TRD, y=Allocation)) +
+  geom_boxplot(fill="#69b3a2"#,width =0.25
+  ) +
+  scale_y_discrete(labels=c("block_1"="1:1", "block_k"="1:k", "block_sqrt"="1:sqrt(k)")) +
+  coord_flip() +
+  theme_bw() +
+  xlim(70, 100) +
+  xlab("Patients per arm") + ylab("Allocation method") +
+  ggtitle("Patients per experimental treatment arm") 
+ggsave("n_per_treatment.png", device = "png", width=7, height=5)
+
+# control comparators per decision
+ggplot(tibble_trial_level, aes(x=n_control_comparators_TRD, y=Allocation)) +
+  geom_boxplot(fill="#69b3a2"#,width =0.25
+  ) +
+  scale_y_discrete(labels=c("block_1"="1:1", "block_k"="1:k", "block_sqrt"="1:sqrt(k)")) +
+  coord_flip() +
+  theme_bw() +
+  xlim(0, 600) +
+  xlab("Controls per comparison") + ylab("Allocation method") +
+  ggtitle("Control comparators per experimental treatment arm") 
+ggsave("ControlComparators.png", device = "png", width=7, height=5)
 
 ####################### ARMS ###################################################
 
@@ -148,7 +179,7 @@ ggsave("Arms_with_boxes.tiff", device = "tiff", width=9, height=4)
 
 ####################### DURATION ###############################################
 
-tibble_duration <- sim_results_7 %>%  
+tibble_duration <- sim_results_1 %>%  
   filter(treatment_ID != "Control") %>%
   select(nsim, rand_type, admin, duration_TRD) %>% 
   mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
@@ -169,8 +200,8 @@ ggplot(tibble_duration, aes(x=duration_TRD, y=Allocation)) +
   scale_y_discrete(labels=c("block_1"="1:1", "block_k"="1:k", "block_sqrt"="1:sqrt(k)")) +
   coord_flip() +
   theme_bw() +
-  #xlim(0, 300) +
-  xlab("Duration per treatment arm in months") + ylab("Allocation method") +
+  xlim(0, 200) +
+  xlab("Duration per treatment arm in weeks") + ylab("Allocation method") +
   ggtitle("Average duration of treatment arms over all possible effect sizes") 
 ggsave("Duration_withBoxes.tiff", device = "tiff", width=7, height=4)
 

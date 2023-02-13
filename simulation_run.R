@@ -21,59 +21,59 @@ source("operating_characteristics.R")
 treatment_effects <- list(
   "TRD"=list("pill_Control"=list(list("mean"=c(32, 20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                   list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    probs=c(0.25,0.25,0.25,0.25)),
              "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                 list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  probs=c(0.25,0.25,0.25,0.25)),
              "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
              "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                    list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     probs=c(0.25,0.25,0.25,0.25))),
   
   "PRD"=list("pill_Control"=list(list("mean"=c(32, 20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "pill_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                   list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                   list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    probs=c(0.25,0.25,0.25,0.25)),
              "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                 list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                 list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  probs=c(0.25,0.25,0.25,0.25)),
              "nasal_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1), 
              "nasal_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
-                                    list("mean"=c(32,17.5),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
+                                    list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                     probs=c(0.25,0.25,0.25,0.25)))
 )
 
 # specify cohorts and initial compounds
-#ways_of_administration=c("pill")
-ways_of_administration=c("pill", "nasal", "IV")
-#cohorts_start <- list("pill"=6)
-cohorts_start <- list("pill"=3, "IV"=1, "nasal"=1)
+ways_of_administration=c("pill")
+#ways_of_administration=c("pill", "nasal", "IV")
+cohorts_start <- list("pill"=6)
+#cohorts_start <- list("pill"=3, "IV"=1, "nasal"=1)
 rand_type="block"
 
 # specify probability of a new treatment becoming available per way of administration
-#prob_new_compound=c(1)
-prob_new_compound=c(0.2,0.1,0.1)
+prob_new_compound=c(1)
+#prob_new_compound=c(0.2,0.1,0.1)
 
 # specify initial compounds per population
 cohorts_start_applic_to_TRD <- cohorts_start
 applicable_to_PRD=FALSE
-#cohorts_start_applic_to_PRD <- list("pill"=0)
-cohorts_start_applic_to_PRD <- list("pill"=0, "IV"=0, "nasal"=0)
+cohorts_start_applic_to_PRD <- list("pill"=0)
+#cohorts_start_applic_to_PRD <- list("pill"=0, "IV"=0, "nasal"=0)
 #applicable_to_PRD=TRUE
 #cohorts_start_applic_to_PRD <- cohorts_start
 
@@ -87,7 +87,7 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 10
+nsim <- 1
 sim_results <- NULL
 
 patients_per_timepoint = list(c(7,7)
@@ -104,10 +104,16 @@ rand_type <- list(#"block_1",
                   "block"#,
                   #"full"
                   )
+ancova_period <- list(TRUE,
+                      FALSE)
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, 
                          "n_fin"=n_fin, 
                          "rand_type"=rand_type,
-                         "pvals"=list(c(0.5,0.1)))
+                         "ancova_period"=ancova_period,
+                         "pvals"=list(c(2,0.1),
+                                      c(1,0.1),
+                                      c(0.5,0.1)
+                                      ))
 
 
 for(i in 1:nrow(scenarios)){
@@ -130,7 +136,8 @@ for(i in 1:nrow(scenarios)){
                                          trial_end="timepoint", 
                                          latest_timepoint_treatment_added=60*4-4,
                                          p_val_interim=scenarios$pvals[[i]][1], 
-                                         p_val_final=scenarios$pvals[[i]][2], 
+                                         p_val_final=scenarios$pvals[[i]][2],
+                                         ancova_period=scenarios$ancova_period[[i]],
                                          sided="two_sided")
     
     ocs <- data.frame(operating_characteristics(single_sim_results) %>% 
@@ -172,7 +179,8 @@ sim_results %>% filter(treatment_ID != "Control") %>%
 
 ########
 
-write.xlsx(sim_results, "alloc_max_arms_fut.xlsx")
-#write.xlsx(sim_results, "threeDomains_full_20.xlsx")
+write.xlsx(sim_results, "period.xlsx")
+#write.xlsx(sim_results, "alloc_3-02.xlsx")
 
-saveRDS(sim_results, "alloc_max_arms_fut.rds")
+saveRDS(sim_results, "period.rds")
+
