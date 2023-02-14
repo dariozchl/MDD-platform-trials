@@ -14,6 +14,7 @@ simulate_trial <- function(cohorts_start,
                            rand_type, # type of randomization "full", "block", "block_1", "block_k", "block_sqrt"
                            patients_per_timepoint, 
                            prob_new_compound, 
+                           new_compounds, # single or multiple treatments can enter at the same time
                            max_treatments, # should be of length length(ways_of_administration) if number_of_compounds_cap=separate, otherwise of length 1
                            number_of_compounds_cap, # can either be "separate" or "global"
                            trial_end, # can be either "pipeline" or "timepoint"
@@ -60,6 +61,26 @@ simulate_trial <- function(cohorts_start,
                                    latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
                                    ways_of_administration=ways_of_administration,
                                    applicable_to_PRD=applicable_to_PRD) 
+    
+    # if more than one treatment can enter at the same time
+    if(new_compounds=="multiple"){
+      cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
+      current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+      
+      while(current_treatments < max_treatments && timestamp<latest_timepoint_treatment_added) {
+        res_list <- check_new_compound(res_list=res_list, 
+                                       number_of_compounds_cap=number_of_compounds_cap, 
+                                       max_treatments=max_treatments, 
+                                       prob_new_compound=prob_new_compound, 
+                                       trial_end=trial_end, 
+                                       timestamp=timestamp, 
+                                       latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
+                                       ways_of_administration=ways_of_administration,
+                                       applicable_to_PRD=applicable_to_PRD)
+        cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
+        current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+      }
+    }
     
     # get sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD

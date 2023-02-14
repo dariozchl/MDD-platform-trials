@@ -104,14 +104,15 @@ rand_type <- list(#"block_1",
                   "block"#,
                   #"full"
                   )
-ancova_period <- list(TRUE,
-                      FALSE)
+ancova_period <- list(TRUE#,
+                      #FALSE
+                      )
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, 
                          "n_fin"=n_fin, 
                          "rand_type"=rand_type,
                          "ancova_period"=ancova_period,
-                         "pvals"=list(c(2,0.1),
-                                      c(1,0.1),
+                         "pvals"=list(#c(2,0.1),
+                                      #c(1,0.1),
                                       c(0.5,0.1)
                                       ))
 
@@ -130,6 +131,7 @@ for(i in 1:nrow(scenarios)){
                                          rand_type=scenarios$rand_type[[i]],
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          prob_new_compound=prob_new_compound,
+                                         new_compounds="multiple",
                                          max_treatments=c(6), 
                                          number_of_compounds_cap="global",
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
@@ -179,8 +181,8 @@ sim_results %>% filter(treatment_ID != "Control") %>%
 
 ########
 
-write.xlsx(sim_results, "period.xlsx")
+write.xlsx(sim_results, "futility.xlsx")
 #write.xlsx(sim_results, "alloc_3-02.xlsx")
 
-saveRDS(sim_results, "period.rds")
+saveRDS(sim_results, "futility.rds")
 
