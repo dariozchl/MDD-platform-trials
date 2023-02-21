@@ -87,7 +87,7 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 1
+nsim <- 10
 sim_results <- NULL
 
 patients_per_timepoint = list(c(7,7)
@@ -104,23 +104,23 @@ rand_type <- list(#"block_1",
                   "block"#,
                   #"full"
                   )
-ancova_period <- list(TRUE#,
-                      #FALSE
+ancova_period <- list(TRUE,
+                      FALSE
                       )
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, 
                          "n_fin"=n_fin, 
                          "rand_type"=rand_type,
                          "ancova_period"=ancova_period,
-                         "pvals"=list(#c(2,0.1),
+                         "pvals"=list(c(2,0.1)#,
                                       #c(1,0.1),
-                                      c(0.5,0.1)
+                                      #c(0.5,0.1)
                                       ))
 
 
 for(i in 1:nrow(scenarios)){
   sim_results_tmp <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
     single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
-                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x/2)), 
+                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x*2)), 
                                          n_fin=scenarios$n_fin[[i]],
                                          treatment_effects=treatment_effects, 
                                          ways_of_administration=ways_of_administration,
@@ -128,6 +128,7 @@ for(i in 1:nrow(scenarios)){
                                          applicable_to_PRD=applicable_to_PRD,
                                          cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
+                                         var_trend=0,
                                          rand_type=scenarios$rand_type[[i]],
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          prob_new_compound=prob_new_compound,
@@ -136,7 +137,7 @@ for(i in 1:nrow(scenarios)){
                                          number_of_compounds_cap="global",
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
                                          trial_end="timepoint", 
-                                         latest_timepoint_treatment_added=60*4-4,
+                                         latest_timepoint_treatment_added=60*4,
                                          p_val_interim=scenarios$pvals[[i]][1], 
                                          p_val_final=scenarios$pvals[[i]][2],
                                          ancova_period=scenarios$ancova_period[[i]],
@@ -153,6 +154,7 @@ for(i in 1:nrow(scenarios)){
       mutate(N = scenarios$n_fin[[i]][[1]], 
              patients_per_timepoint = scenarios$patients_per_timepoint[[i]][1],
              rand_type = scenarios$rand_type[[i]],
+             ancova_period = scenarios$ancova_period[[i]],
              pvalues = paste(scenarios$pvals[[i]], collapse=","))
     
     return(ocs)
@@ -181,8 +183,8 @@ sim_results %>% filter(treatment_ID != "Control") %>%
 
 ########
 
-write.xlsx(sim_results, "futility.xlsx")
-#write.xlsx(sim_results, "alloc_3-02.xlsx")
+#write.xlsx(sim_results, "alloc_test_fixed_n8.xlsx")
+write.xlsx(sim_results, "period_5plus.xlsx")
 
-saveRDS(sim_results, "futility.rds")
+saveRDS(sim_results, "period_5plus.rds")
 

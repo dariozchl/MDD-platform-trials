@@ -11,6 +11,7 @@ simulate_trial <- function(cohorts_start,
                            applicable_to_PRD,
                            cohorts_start_applic_to_PRD, #
                            sharing_type,
+                           var_trend,
                            rand_type, # type of randomization "full", "block", "block_1", "block_k", "block_sqrt"
                            patients_per_timepoint, 
                            prob_new_compound, 
@@ -51,40 +52,47 @@ simulate_trial <- function(cohorts_start,
   ##### Running Simulations #####
   while (!trial_stop) {
     
-    # check whether new compound is available and if yes, add it to res_list
-    res_list <- check_new_compound(res_list=res_list, 
-                                   number_of_compounds_cap=number_of_compounds_cap, 
-                                   max_treatments=max_treatments, 
-                                   prob_new_compound=prob_new_compound, 
-                                   trial_end=trial_end, 
-                                   timestamp=timestamp, 
-                                   latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
-                                   ways_of_administration=ways_of_administration,
-                                   applicable_to_PRD=applicable_to_PRD) 
-    
-    # if more than one treatment can enter at the same time
-    if(new_compounds=="multiple"){
-      cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
-      current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+    # only check for new compounds every month (i.q. every 4 weeks)
+    if(timestamp %% 4 == 0){
+       #check whether new compound is available and if yes, add it to res_list
+      res_list <- check_new_compound(res_list=res_list, 
+                                     number_of_compounds_cap=number_of_compounds_cap, 
+                                     max_treatments=max_treatments, 
+                                     prob_new_compound=prob_new_compound, 
+                                     trial_end=trial_end, 
+                                     timestamp=timestamp, 
+                                     latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
+                                     ways_of_administration=ways_of_administration,
+                                     applicable_to_PRD=applicable_to_PRD) 
       
-      while(current_treatments < max_treatments && timestamp<latest_timepoint_treatment_added) {
-        res_list <- check_new_compound(res_list=res_list, 
-                                       number_of_compounds_cap=number_of_compounds_cap, 
-                                       max_treatments=max_treatments, 
-                                       prob_new_compound=prob_new_compound, 
-                                       trial_end=trial_end, 
-                                       timestamp=timestamp, 
-                                       latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
-                                       ways_of_administration=ways_of_administration,
-                                       applicable_to_PRD=applicable_to_PRD)
+      # if more than one treatment can enter at the same time
+      if(new_compounds=="multiple"){
         cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
         current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+        
+        while(current_treatments < max_treatments && timestamp<latest_timepoint_treatment_added) {
+          res_list <- check_new_compound(res_list=res_list, 
+                                         number_of_compounds_cap=number_of_compounds_cap, 
+                                         max_treatments=max_treatments, 
+                                         prob_new_compound=prob_new_compound, 
+                                         trial_end=trial_end, 
+                                         timestamp=timestamp, 
+                                         latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
+                                         ways_of_administration=ways_of_administration,
+                                         applicable_to_PRD=applicable_to_PRD)
+          cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
+          current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+        }
       }
+
     }
     
     # get sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD
-    n <- rpois(n=2, lambda=patients_per_timepoint)
+    #n <- rpois(n=2, lambda=patients_per_timepoint)
+    #n <- c(6,6)
+    n <- sample(c(6,7,8), prob=c(0.05,0.9,0.05), replace=TRUE, size=2)
+    
     
     # update time stamps here since new patients were just recruited
     timestamp <- timestamp + 1
@@ -191,7 +199,12 @@ simulate_trial <- function(cohorts_start,
             which_treatment <- rand_list[[population]][[pos2]][n_period[[population]][[pos1]]]
             
             #response probability for the specific arm
-            response <- res_list[[population]][[which_treatment]]$response
+            #response <- res_list[[population]][[which_treatment]]$response
+            response_trend <- res_list[[population]][[which_treatment]]$response
+            # week 6 measurement improves by 1% of the week 6 variance every time period
+            response_trend[[1]][1] <- response_trend$mean[1]+var_trend*time_period
+            response_trend[[1]][2] <- response_trend$mean[2]+var_trend*time_period
+            response <- response_trend
             
             #draw a response
             draw <- rmvnorm(n=1,
