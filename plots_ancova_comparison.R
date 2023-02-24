@@ -11,8 +11,8 @@ sim_results <- bind_rows(sim_period, sim_noPeriod)
 ####################### SAMPLE SIZES ###########################################
 
 # analyse patients needed per platform with regard to the allocation method
-n_perPlatform <- sim_results %>% select(nsim, period, admin, n_TRD) %>% 
-  mutate(ancova =factor(period, levels=c(0,1))) %>%
+n_perPlatform <- sim_results %>% select(nsim, ancova_period, admin, n_TRD) %>% 
+  mutate(ancova =factor(ancova_period, levels=c(FALSE,TRUE))) %>%
   group_by(nsim, ancova) %>% summarise(n_platform = sum(n_TRD))
 
 n_perPlatform_mean <- n_perPlatform %>% 
@@ -24,9 +24,9 @@ write.xlsx(n_perPlatform_mean, "n_perPlatform_mean.xlsx")
 ggplot(n_perPlatform,
        aes(x=n_platform,
            y=ancova)) +
-  scale_y_discrete(labels=c('0'="without period", '1'="with period")) +
+  scale_y_discrete(labels=c('FALSE'="without period", 'TRUE'="with period")) +
   geom_boxplot(fill="#69b3a2") +
-  xlim(2100, 2200)+
+  #xlim(2100, 2200)+
   coord_flip() +
   xlab("Sample size per platform") + ylab("Ancova method") +
   ggtitle("Size of platform trial") +
@@ -37,7 +37,7 @@ ggsave("SampleSize_withBoxes.tiff", device = "tiff", width=7, height=4)
 
 tibble_n_control_platform <- sim_results %>% 
   filter(treatment_ID == "Control") %>% 
-  mutate(ancova =factor(period, levels=c(0,1))) %>%
+  mutate(ancova =factor(ancova_period, levels=c(0,1))) %>%
   select(nsim, ancova, n_TRD) %>% 
   group_by(nsim, ancova) %>% summarise(n_control_platform = sum(n_TRD))
 
@@ -71,8 +71,8 @@ ggplot(tibble_ctrlAndTotal, aes(x = size, y = ancova,
 ggsave("Control_and_total.tiff", device = "tiff", width=7, height=4)
 
 tibble_n_onTreatment <- sim_results %>% filter(treatment_ID != "Control") %>% 
-  select(nsim, period, admin, n_TRD) %>% 
-  mutate(ancova =factor(period, levels=c(0,1))) %>%
+  select(nsim, ancova_period, admin, n_TRD) %>% 
+  mutate(ancova =factor(ancova_period, levels=c(0,1))) %>%
   group_by(nsim, ancova) %>% summarise(n_onTreatment = sum(n_TRD)) %>% 
   add_column(type = "on treatment") %>% rename(size=n_onTreatment)
 
@@ -95,7 +95,7 @@ ggsave("Control_treatment_and_total.tiff", device = "tiff", width=9, height=4)
 
 ####### ON TRIAL LEVEL
 tibble_trial_level <- sim_results %>% 
-  mutate(ancova =factor(period, levels=c(0,1))) %>%
+  mutate(ancova =factor(ancova_period, levels=c(0,1))) %>%
   filter(treatment_ID != "Control") %>%
   select(nsim, ancova, n_TRD, n_control_comparators_TRD)
 
@@ -128,8 +128,8 @@ ggsave("ControlComparators.png", device = "png", width=7, height=5)
 # data number of arms per admin (excluding control)
 tibble_arms <- sim_results %>% 
   filter(treatment_ID != "Control") %>% 
-  group_by(nsim, period) %>% count() %>%
-  mutate(ancova =factor(period, levels=c(0,1))) %>%
+  group_by(nsim, ancova_period) %>% count() %>%
+  mutate(ancova =factor(ancova_period, levels=c(0,1))) %>%
   group_by(nsim, ancova) %>% summarise(arms = sum(n))
 
 number_of_arms_mean <- tibble_arms %>% 
@@ -155,8 +155,8 @@ ggsave("Arms_with_boxes.tiff", device = "tiff", width=9, height=9)
 
 tibble_duration <- sim_results %>%  
   filter(treatment_ID != "Control") %>%
-  select(nsim, period, admin, duration_TRD) %>% 
-  mutate(ancova =factor(period, levels=c(0,1))) 
+  select(nsim, ancova_period, admin, duration_TRD) %>% 
+  mutate(ancova =factor(ancova_period, levels=c(0,1))) 
 #minimum duartion tibble_duration$duration_TRD
 #tibble_duration %>% filter(N =="40") #%>% #select(duration_TRD) %>% 
 #summarise(min_val=min(duration_TRD))
@@ -189,7 +189,7 @@ sim_results %>%
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", #"stopped early", 
                                                         "failure")),
          d = factor(round(d_TRD,2)),
-         period_o = factor(period, levels = c('0', '1'))
+         period_o = factor(ancova_period, levels = c('0', '1'))
   ) %>% 
   group_by(admin, d, decisions_TRD, period_o, .drop=FALSE) %>% summarise(n=n()) %>%
   group_by(admin, d, period_o) %>% mutate(percentage = 100 * n / sum(n)) %>% 
@@ -218,13 +218,13 @@ ggsave("decisions_TRD.tiff", device = "tiff", width=12, height=12)
 
 # data decisions in platform per admin and effect size
 pow <- sim_results %>% filter(treatment_ID != "Control") %>%
-  select(nsim, period, decisions_TRD, d_TRD, d_TRD_est) %>%
-  mutate(ancova =factor(period, levels=c(0,1))) %>% 
+  select(nsim, ancova_period, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(ancova =factor(ancova_period, levels=c(FALSE,TRUE))) %>% 
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          d = factor(round(d_TRD,2))) %>% 
   group_by(d, decisions_TRD, ancova, .drop=FALSE) %>% summarise(n=n()) %>%
   group_by(d, ancova) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
-write.xlsx(pow, "power.xlsx")
+write.xlsx(pow, "power_one62.xlsx")
 print(xtable(pow, type = "latex"), file = "power.tex")
 
 # plot for d = 0.5
@@ -239,7 +239,7 @@ p_pow05 <- pow %>% filter(d ==0.5) %>%
   ggtitle("d = 0.5") + theme(plot.title=element_text(hjust=0.5))+ 
   ylim(0, 100) +
   geom_hline(yintercept = 80, linetype="dotted") +
-  scale_x_discrete(labels=c('0'="without period", '1'="with period")) +
+  scale_x_discrete(labels=c('FALSE'="without period", 'TRUE'="with period")) +
   labs(y="Power in %")
 
 ## 0.35
@@ -301,7 +301,7 @@ annotate_figure(p_successRates,
                                 #face = "bold", 
                                 size = 14)
 )
-ggsave("Success_rates.tiff", device = "tiff", width=9, height=7)
+ggsave("Success_rates_period.png", device = "png", width=9, height=7)
 
 
 #arrange the 3 plots together
@@ -323,19 +323,19 @@ ggsave("Power_3.png", device = "png", width=9, height=4)
 effect_size <- sim_results %>% filter(patients_per_timepoint==7) %>%
   filter(treatment_ID != "Control") %>% 
   mutate(d = factor(round(d_TRD,2)),
-         ancova =factor(period, levels=c(0,1)) 
+         ancova =factor(ancova_period, levels=c(FALSE,TRUE)) 
   ) %>% select(nsim, ancova, d, d_TRD_est) %>% 
   group_by(d, ancova) %>% summarise(est = mean(d_TRD_est))
 write.xlsx(effect_size, "effect_size.xlsx")
 
 scenario_labeller <- labeller(
   `d` = c(`0` = "d = 0", `0.2` = "d = 0.2", `0.35` = "d = 0.35", `0.5` = "d = 0.50"),
-  `period_o` = c('0'="without period", '1'="with period")
+  `period_o` = c('FALSE'="without period", 'TRUE'="with period")
 )
 sim_results %>% filter(patients_per_timepoint==7) %>%
   filter(treatment_ID != "Control") %>% 
   mutate(d = factor(round(d_TRD,2)),
-         period_o =factor(period, levels=c(0,1))
+         period_o =factor(ancova_period, levels=c(FALSE,TRUE))
   ) %>%
   ggplot(.) + 
   geom_violin(aes(x=period_o, 
@@ -345,7 +345,7 @@ sim_results %>% filter(patients_per_timepoint==7) %>%
                                d = as.factor(c(0,0.2,0.35, 0.5))), 
              aes(yintercept=y), linetype="dotted") +
   scale_fill_discrete("ANCOVA",
-                      breaks=c('0', '1'),
+                      breaks=c('FALSE', 'TRUE'),
                       labels=c("without period", "with period")
   )+
   scale_x_discrete(breaks=c())+

@@ -5,6 +5,7 @@ generate_rand_list <- function(res_list,
                                n_fin,
                                ways_of_administration,
                                applicable_to_PRD,
+                               control_cap,
                                rand_type="block" # "block", "block_1", "block_k", "block_sqrt"
                                ) {
   
@@ -50,9 +51,9 @@ generate_rand_list <- function(res_list,
         ratio_admin <- n_treatments_per_domain
       } else if(rand_type == "block_sqrt"){
         ratio_admin <- sapply(X=n_treatments_per_domain,FUN=function(x) x+sqrt(x))
-      } else if(rand_type == "block"){
+      } else if(rand_type == "block_sqrt_cap"){
         #cap at 35% allocation to control, transform percentage to ratio via k*cap/(1-cap)
-        ratio_admin <- sapply(X=n_treatments_per_domain,FUN=function(x) x+max(sqrt(x), x*0.35/(1-0.35)))
+        ratio_admin <- sapply(X=n_treatments_per_domain,FUN=function(x) x+max(sqrt(x), x*control_cap/(1-control_cap)))
       }
       
       # relevant if sqrt is used
@@ -75,7 +76,7 @@ generate_rand_list <- function(res_list,
         ratio_admin_modified <- floor(ratio_admin)+add_patients
         
         # sample one random block
-        rand_block <- sample(rep(active_admin, ratio_admin))
+        rand_block <- sample(rep(active_admin, ratio_admin_modified))
         # add to existing randomization list to administration
         rand_admin <- c(rand_admin, rand_block)
       }
@@ -93,7 +94,7 @@ generate_rand_list <- function(res_list,
         active_arms_in_admin <- (((names(res_list[[population]])))[cohorts_left[,population]])[active_arms_in_admin_index]
         # number of active treatment arms (without control)
         k <- length(active_arms_in_admin)-1
-        
+        #k <- 1.05
         # select mode of block randomization
         if(rand_type == "block_1"){
           control_ratio <- 1
@@ -101,14 +102,14 @@ generate_rand_list <- function(res_list,
           control_ratio <- k
         } else if(rand_type == "block_sqrt"){
           control_ratio <- sqrt(k)
-        } else if(rand_type == "block"){
+        } else if(rand_type == "block_sqrt_cap"){
           #cap at 35% allocation to control, transform percentage to ratio via k*cap/(1-cap)
-          control_ratio <- max(sqrt(k), k*0.35/(1-0.35))
+          control_ratio <- max(sqrt(k), k*control_cap/(1-control_cap))
         }
         
         # randomization ratio control_ratio:1:1 ... :1
         # first element allocatio ratio to control, rest for active treatments
-        ratio_alloc <- c(control_ratio,rep(1, k))
+        ratio_alloc <- c(control_ratio,rep(1, length(active_arms_in_admin)-1))
         
         # relevant if sqrt is used
         ratio_alloc_modified <- ratio_alloc
@@ -131,7 +132,7 @@ generate_rand_list <- function(res_list,
           ratio_alloc_modified[1] <- floor(ratio_alloc[1])+add_control
           
           # samples one block
-          rand_block <- sample(rep(active_arms_in_admin, ratio_alloc))
+          rand_block <- sample(rep(active_arms_in_admin, ratio_alloc_modified))
           # adds this block to the randomization list
           rand_arm<- c(rand_arm,rand_block)
         }

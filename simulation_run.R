@@ -61,12 +61,12 @@ treatment_effects <- list(
 # specify cohorts and initial compounds
 ways_of_administration=c("pill")
 #ways_of_administration=c("pill", "nasal", "IV")
-cohorts_start <- list("pill"=6)
+cohorts_start <- list("pill"=3)
 #cohorts_start <- list("pill"=3, "IV"=1, "nasal"=1)
-rand_type="block"
+rand_type="block_sqrt_cap"
 
 # specify probability of a new treatment becoming available per way of administration
-prob_new_compound=c(1)
+prob_new_compound=c(0.2)
 #prob_new_compound=c(0.2,0.1,0.1)
 
 # specify initial compounds per population
@@ -87,7 +87,7 @@ registerDoParallel(cl)
 
 # setting seed ?
 
-nsim <- 10
+nsim <- 1000
 sim_results <- NULL
 
 patients_per_timepoint = list(c(7,7)
@@ -98,20 +98,33 @@ n_fin <- list(#list("TRD"=40,"PRD"=40),
               #list("TRD"=100,"PRD"=100), 
               #list("TRD"=120,"PRD"=120)
               )
-rand_type <- list(#"block_1", 
+rand_type <- list(#"block_1"#, 
                   #"block_k", 
                   #"block_sqrt",
-                  "block"#,
+                  "block_sqrt_cap"#,
                   #"full"
                   )
-ancova_period <- list(TRUE,
+
+control_cap <- list(0.275,
+                    0.3,
+                    0.325,
+                    0.35,
+                    0.375,
+                    0.4,
+                    0.425,
+                    0.45,
+                    0.475,
+                    0.5
+                    )
+ancova_period <- list(#TRUE,
                       FALSE
                       )
 scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint, 
                          "n_fin"=n_fin, 
                          "rand_type"=rand_type,
+                         "control_cap"=control_cap,
                          "ancova_period"=ancova_period,
-                         "pvals"=list(c(2,0.1)#,
+                         "pvals"=list(c(1,0.1)#,
                                       #c(1,0.1),
                                       #c(0.5,0.1)
                                       ))
@@ -120,7 +133,7 @@ scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint,
 for(i in 1:nrow(scenarios)){
   sim_results_tmp <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
     single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
-                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x*2)), 
+                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x/2)), 
                                          n_fin=scenarios$n_fin[[i]],
                                          treatment_effects=treatment_effects, 
                                          ways_of_administration=ways_of_administration,
@@ -129,10 +142,11 @@ for(i in 1:nrow(scenarios)){
                                          cohorts_start_applic_to_PRD=cohorts_start_applic_to_PRD,
                                          sharing_type="concurrent",
                                          var_trend=0,
+                                         control_cap=scenarios$control_cap[[i]],
                                          rand_type=scenarios$rand_type[[i]],
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          prob_new_compound=prob_new_compound,
-                                         new_compounds="multiple",
+                                         new_compounds="single",
                                          max_treatments=c(6), 
                                          number_of_compounds_cap="global",
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
@@ -154,6 +168,7 @@ for(i in 1:nrow(scenarios)){
       mutate(N = scenarios$n_fin[[i]][[1]], 
              patients_per_timepoint = scenarios$patients_per_timepoint[[i]][1],
              rand_type = scenarios$rand_type[[i]],
+             control_cap = scenarios$control_cap[[i]],
              ancova_period = scenarios$ancova_period[[i]],
              pvalues = paste(scenarios$pvals[[i]], collapse=","))
     
@@ -174,7 +189,7 @@ sim_results %>% filter(treatment_ID != "Control") %>%
   select(nsim, rand_type, decisions_TRD, d_TRD, d_TRD_est) %>%
   mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
                                                 "block_sqrt",
-                                                "block",
+                                                "block_sqrt_cap",
                                                 "full"))) %>% 
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          d = factor(round(d_TRD,2))) %>% 
@@ -184,7 +199,7 @@ sim_results %>% filter(treatment_ID != "Control") %>%
 ########
 
 #write.xlsx(sim_results, "alloc_test_fixed_n8.xlsx")
-write.xlsx(sim_results, "period_5plus.xlsx")
+write.xlsx(sim_results, "control_cap_start3_fut.xlsx")
 
-saveRDS(sim_results, "period_5plus.rds")
+saveRDS(sim_results, "control_cap_start3_fut.rds")
 

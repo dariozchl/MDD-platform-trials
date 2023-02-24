@@ -12,6 +12,7 @@ simulate_trial <- function(cohorts_start,
                            cohorts_start_applic_to_PRD, #
                            sharing_type,
                            var_trend,
+                           control_cap,
                            rand_type, # type of randomization "full", "block", "block_1", "block_k", "block_sqrt"
                            patients_per_timepoint, 
                            prob_new_compound, 
@@ -120,6 +121,7 @@ simulate_trial <- function(cohorts_start,
                                         n_fin,
                                         ways_of_administration,
                                         applicable_to_PRD,
+                                        control_cap,
                                         rand_type
                                         )
                            
