@@ -49,41 +49,144 @@ simulate_trial <- function(cohorts_start,
   timestamp <- 0
   time_period <- 0
   remove_compound <<- TRUE
+  more_compounds <- TRUE
 
   ##### Running Simulations #####
   while (!trial_stop) {
     
     # only check for new compounds every month (i.q. every 4 weeks)
     if(timestamp %% 4 == 0){
-       #check whether new compound is available and if yes, add it to res_list
-      res_list <- check_new_compound(res_list=res_list, 
-                                     number_of_compounds_cap=number_of_compounds_cap, 
-                                     max_treatments=max_treatments, 
-                                     prob_new_compound=prob_new_compound, 
-                                     trial_end=trial_end, 
-                                     timestamp=timestamp, 
-                                     latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
-                                     ways_of_administration=ways_of_administration,
-                                     applicable_to_PRD=applicable_to_PRD) 
+      weeks_left <- latest_timepoint_treatment_added-timestamp
       
-      # if more than one treatment can enter at the same time
-      if(new_compounds=="multiple"){
-        cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
-        current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+      #calculates number of currently active treatments
+      cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
+      current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+      
+      ok_to_add <- FALSE
+      #the fraction of recruited patients that would be allocated to a newly entering treatment
+      #works only for one domain now
+      if(rand_type == "block_1"){
+        frac_to_treatment <- 1/(current_treatments+1)
+        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*1/2){
+          ok_to_add <- TRUE
+        }
+      } else if(rand_type == "block_k"){
+        frac_to_treatment <- 1/(2*(current_treatments+1))
+        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.88){
+          ok_to_add <- TRUE
+        }
+      } else if(rand_type == "block_sqrt"){
+        frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
+        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.815){
+          ok_to_add <- TRUE
+        }
+      } else if(rand_type == "block_sqrt_cap" || rand_type == "full"){
+        if(current_treatments>2){
+          frac_to_treatment <- (1-control_cap)/(current_treatments+1)
+        } else {
+          frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
+        }  
+        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.615){
+          ok_to_add <- TRUE
+        }
+      }
+      
+      #if(ok_to_add == FALSE){
+      #  more_compounds <- FALSE
+      #}
+      
+      #only check for new compounds, if at leat half of the required patients canbe recruited before month 60
+      if(ok_to_add == TRUE && more_compounds == TRUE){
+        #check whether new compound is available and if yes, add it to res_list
+        res_list <- check_new_compound(res_list=res_list, 
+                                       number_of_compounds_cap=number_of_compounds_cap, 
+                                       max_treatments=max_treatments, 
+                                       prob_new_compound=prob_new_compound, 
+                                       trial_end=trial_end, 
+                                       timestamp=timestamp, 
+                                       latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
+                                       ways_of_administration=ways_of_administration,
+                                       applicable_to_PRD=applicable_to_PRD) 
         
-        while(current_treatments < max_treatments && timestamp<latest_timepoint_treatment_added) {
-          res_list <- check_new_compound(res_list=res_list, 
-                                         number_of_compounds_cap=number_of_compounds_cap, 
-                                         max_treatments=max_treatments, 
-                                         prob_new_compound=prob_new_compound, 
-                                         trial_end=trial_end, 
-                                         timestamp=timestamp, 
-                                         latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
-                                         ways_of_administration=ways_of_administration,
-                                         applicable_to_PRD=applicable_to_PRD)
+        # if more than one treatment can enter at the same time
+        if(new_compounds=="multiple"){
           cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
           current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
-        }
+          
+          
+          ok_to_add <- FALSE
+          #the fraction of recruited patients that would be allocated to a newly entering treatment
+          #works only for one domain now
+          if(rand_type == "block_1"){
+            frac_to_treatment <- 1/(current_treatments+1)
+            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*1/2){
+              ok_to_add <- TRUE
+            }
+          } else if(rand_type == "block_k"){
+            frac_to_treatment <- 1/(2*(current_treatments+1))
+            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.88){
+              ok_to_add <- TRUE
+            }
+          } else if(rand_type == "block_sqrt"){
+            frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
+            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.815){
+              ok_to_add <- TRUE
+            }
+          } else if(rand_type == "block_sqrt_cap" || rand_type == "full"){
+            if(current_treatments>2){
+              frac_to_treatment <- (1-control_cap)/(current_treatments+1)
+            } else {
+              frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
+            }  
+            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.615){
+              ok_to_add <- TRUE
+            }
+          }
+          
+          while(current_treatments < max_treatments && timestamp<latest_timepoint_treatment_added && ok_to_add == TRUE) {
+            res_list <- check_new_compound(res_list=res_list, 
+                                           number_of_compounds_cap=number_of_compounds_cap, 
+                                           max_treatments=max_treatments, 
+                                           prob_new_compound=prob_new_compound, 
+                                           trial_end=trial_end, 
+                                           timestamp=timestamp, 
+                                           latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
+                                           ways_of_administration=ways_of_administration,
+                                           applicable_to_PRD=applicable_to_PRD)
+            cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
+            current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
+            
+            ok_to_add <- FALSE
+            #the fraction of recruited patients that would be allocated to a newly entering treatment
+            #works only for one domain now
+            if(rand_type == "block_1"){
+              frac_to_treatment <- 1/(current_treatments+1)
+              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*1/2){
+                ok_to_add <- TRUE
+              }
+            } else if(rand_type == "block_k"){
+              frac_to_treatment <- 1/(2*(current_treatments+1))
+              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.88){
+                ok_to_add <- TRUE
+              }
+            } else if(rand_type == "block_sqrt"){
+              frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
+              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.815){
+                ok_to_add <- TRUE
+              }
+            } else if(rand_type == "block_sqrt_cap" || rand_type == "full"){
+              if(current_treatments>2){
+                frac_to_treatment <- (1-control_cap)/(current_treatments+1)
+              } else {
+                frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
+              }  
+              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.615){
+                ok_to_add <- TRUE
+              }
+            }
+          } # end while
+        } # end multiple
+        
       }
 
     }
