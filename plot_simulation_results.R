@@ -69,7 +69,7 @@ ggsave("N_per_pop.tiff", device = "tiff", width=9, height=4)
 
 
 # total number of patients in platform
-N_per_platform <- sim_results %>% group_by(nsim, patients_per_timepoint, N) %>% summarise(n_total = sum(n_TRD+n_PRD))
+N_per_platform <- sim_results %>% group_by(nsim, patients_per_timepoint, N) %>% summarise(n_total = sum(n_TRD))
 
 N_per_platform %>% 
   ggplot(.) + geom_violin(aes(x="", y=n_total), fill="grey") +
@@ -359,7 +359,8 @@ ggsave("Power_3.tiff", device = "tiff", width=9, height=4)
 ##############################################
 # sample size per platform with boxplots
 sample_size_perPlatform <- sim_results %>% select(nsim, N, admin, n_TRD) %>% mutate(N = factor(N, levels=c("40", "60", "80", "100", "120"))) %>%
-  group_by(nsim, N) %>% summarise(n_platform = sum(n_TRD))
+  group_by(nsim, N) %>% summarise(n_platform = sum(n_TRD)) %>% filter(N=="120") #group_by(nsim, N) %>% mutate(med = median(n_platform))
+median(sample_size_perPlatform$n_platform)
 
 sample_size_perPlatform %>% filter(N == "40")
 

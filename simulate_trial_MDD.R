@@ -57,6 +57,12 @@ simulate_trial <- function(cohorts_start,
     # only check for new compounds every month (i.q. every 4 weeks)
     if(timestamp %% 4 == 0){
       weeks_left <- latest_timepoint_treatment_added-timestamp
+      n_needed <- patients_still_needed(res_list,
+                                        applicable_to_PRD,
+                                        population=1,
+                                        way_of_administration="pill", 
+                                        rand_type,
+                                        control_cap)
       
       #calculates number of currently active treatments
       cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
@@ -67,35 +73,39 @@ simulate_trial <- function(cohorts_start,
       #works only for one domain now
       if(rand_type == "block_1"){
         frac_to_treatment <- 1/(current_treatments+1)
-        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*1/2){
+        if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.3/frac_to_treatment){
           ok_to_add <- TRUE
         }
       } else if(rand_type == "block_k"){
         frac_to_treatment <- 1/(2*(current_treatments+1))
-        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.88){
+        if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.28/frac_to_treatment){
           ok_to_add <- TRUE
         }
       } else if(rand_type == "block_sqrt"){
         frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
-        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.815){
+        if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.22/frac_to_treatment){
           ok_to_add <- TRUE
         }
       } else if(rand_type == "block_sqrt_cap" || rand_type == "full"){
-        if(current_treatments>2){
+        use_cap <- TRUE 
+        if(current_treatments > 0 && (sqrt(current_treatments)/(current_treatments + sqrt(current_treatments))) > control_cap){
+          use_cap <- FALSE
+        }
+        if(use_cap == TRUE){
           frac_to_treatment <- (1-control_cap)/(current_treatments+1)
         } else {
           frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
         }  
-        if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.615){
+        if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.2/frac_to_treatment){
           ok_to_add <- TRUE
         }
       }
       
-      #if(ok_to_add == FALSE){
-      #  more_compounds <- FALSE
-      #}
+      if(ok_to_add == FALSE){
+        more_compounds <- FALSE
+      }
       
-      #only check for new compounds, if at leat half of the required patients canbe recruited before month 60
+      #only check for new compounds, if at least half of the required patients can be recruited before month 60
       if(ok_to_add == TRUE && more_compounds == TRUE){
         #check whether new compound is available and if yes, add it to res_list
         res_list <- check_new_compound(res_list=res_list, 
@@ -113,32 +123,42 @@ simulate_trial <- function(cohorts_start,
           cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
           current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
           
+          n_needed <- patients_still_needed(res_list,
+                                            applicable_to_PRD,
+                                            population=1,
+                                            way_of_administration="pill", 
+                                            rand_type,
+                                            control_cap)
           
           ok_to_add <- FALSE
           #the fraction of recruited patients that would be allocated to a newly entering treatment
           #works only for one domain now
           if(rand_type == "block_1"){
             frac_to_treatment <- 1/(current_treatments+1)
-            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*1/2){
+            if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.3/frac_to_treatment){
               ok_to_add <- TRUE
             }
           } else if(rand_type == "block_k"){
             frac_to_treatment <- 1/(2*(current_treatments+1))
-            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.88){
+            if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.28/frac_to_treatment){
               ok_to_add <- TRUE
             }
           } else if(rand_type == "block_sqrt"){
             frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
-            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.815){
+            if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.22/frac_to_treatment){
               ok_to_add <- TRUE
             }
           } else if(rand_type == "block_sqrt_cap" || rand_type == "full"){
-            if(current_treatments>2){
+            use_cap <- TRUE 
+            if(current_treatments > 0 && (sqrt(current_treatments)/(current_treatments + sqrt(current_treatments))) > control_cap){
+              use_cap <- FALSE
+            }
+            if(use_cap == TRUE){
               frac_to_treatment <- (1-control_cap)/(current_treatments+1)
             } else {
               frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
             }  
-            if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.615){
+            if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.2/frac_to_treatment){
               ok_to_add <- TRUE
             }
           }
@@ -153,6 +173,14 @@ simulate_trial <- function(cohorts_start,
                                            latest_timepoint_treatment_added=latest_timepoint_treatment_added, 
                                            ways_of_administration=ways_of_administration,
                                            applicable_to_PRD=applicable_to_PRD)
+            
+            n_needed <- patients_still_needed(res_list,
+                                              applicable_to_PRD,
+                                              population=1,
+                                              way_of_administration="pill", 
+                                              rand_type,
+                                              control_cap)
+            
             cohorts_left <- coh_left_check(res_list, applicable_to_PRD)
             current_treatments <- sum(rowSums(cohorts_left) >= 1) - length(ways_of_administration)
             
@@ -161,26 +189,30 @@ simulate_trial <- function(cohorts_start,
             #works only for one domain now
             if(rand_type == "block_1"){
               frac_to_treatment <- 1/(current_treatments+1)
-              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*1/2){
+              if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.3/frac_to_treatment){
                 ok_to_add <- TRUE
               }
             } else if(rand_type == "block_k"){
               frac_to_treatment <- 1/(2*(current_treatments+1))
-              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.88){
+              if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.28/frac_to_treatment){
                 ok_to_add <- TRUE
               }
             } else if(rand_type == "block_sqrt"){
               frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
-              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.815){
+              if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.22/frac_to_treatment){
                 ok_to_add <- TRUE
               }
             } else if(rand_type == "block_sqrt_cap" || rand_type == "full"){
-              if(current_treatments>2){
+              use_cap <- TRUE 
+              if(current_treatments > 0 && (sqrt(current_treatments)/(current_treatments + sqrt(current_treatments))) > control_cap){
+                use_cap <- FALSE
+              }
+              if(use_cap == TRUE){
                 frac_to_treatment <- (1-control_cap)/(current_treatments+1)
               } else {
                 frac_to_treatment <- 1/(current_treatments+1+sqrt(current_treatments+1))
               }  
-              if(patients_per_timepoint[1]*weeks_left*frac_to_treatment >= n_fin[[1]]*0.615){
+              if(patients_per_timepoint[1]*weeks_left >= n_needed + 80*0.2/frac_to_treatment){
                 ok_to_add <- TRUE
               }
             }
@@ -189,7 +221,7 @@ simulate_trial <- function(cohorts_start,
         
       }
 
-    }
+    } # end mod 4
     
     # get sample size to be allocated to routes of administration
     # patients_per_timepoint has two entries, one for TRD and one for PRD
@@ -347,6 +379,7 @@ simulate_trial <- function(cohorts_start,
   return(res_list)
 
 }
+
 
 
 

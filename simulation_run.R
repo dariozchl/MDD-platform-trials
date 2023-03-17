@@ -7,6 +7,7 @@ source("create_cohort_initial.R")
 source("coh_left_check.R")
 source("check_new_compound.R")
 source("total_n.R")
+source("patients_still_needed.R")
 source("update_alloc_ratio.R")
 source("generate_rand_list.R")
 source("create_cohort_new.R")
@@ -25,6 +26,7 @@ treatment_effects <- list(
                                    list("mean"=c(32,16),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    list("mean"=c(32,14.3),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                    probs=c(0.25,0.25,0.25,0.25)),
+             #probs=c(0.25,0.25,0.25,0.25)),
              "IV_Control"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), probs=1),
              "IV_Treatment"=list(list("mean"=c(32,20),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
                                  list("mean"=c(32,17.75),"sigma"=matrix(c(31.75, 13.4, 13.4, 123.96), ncol=2)), 
@@ -98,7 +100,7 @@ n_fin <- list(#list("TRD"=40,"PRD"=40),
               #list("TRD"=100,"PRD"=100), 
               #list("TRD"=120,"PRD"=120)
               )
-rand_type <- list(#"block_1"#, 
+rand_type <- list(#"block_1", 
                   #"block_k", 
                   #"block_sqrt",
                   "block_sqrt_cap"#,
@@ -124,8 +126,8 @@ scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint,
                          "rand_type"=rand_type,
                          "control_cap"=control_cap,
                          "ancova_period"=ancova_period,
-                         "pvals"=list(c(1,0.1)#,
-                                      #c(1,0.1),
+                         "pvals"=list(c(20,0.1)#,
+                                      #c(1,0.1)#,
                                       #c(0.5,0.1)
                                       ))
 
@@ -133,7 +135,7 @@ scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint,
 for(i in 1:nrow(scenarios)){
   sim_results_tmp <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
     single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
-                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x/2)), 
+                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x*2)), 
                                          n_fin=scenarios$n_fin[[i]],
                                          treatment_effects=treatment_effects, 
                                          ways_of_administration=ways_of_administration,
@@ -199,7 +201,7 @@ sim_results %>% filter(treatment_ID != "Control") %>%
 ########
 
 #write.xlsx(sim_results, "alloc_test_fixed_n8.xlsx")
-write.xlsx(sim_results, "control_cap_start3_fut.xlsx")
+write.xlsx(sim_results, "test_equal_random.xlsx")
 
-saveRDS(sim_results, "control_cap_start3_fut.rds")
+saveRDS(sim_results, "test_equal_random.rds")
 
