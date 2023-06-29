@@ -1,4 +1,4 @@
-# checks whether the required sample size for the interim or final analysis is reached and makes a decision when this condition is fullfilled for the first time
+# checks whether the required sample size for the interim or final analysis is reached and makes a decision when this condition is fulfilled for the first time
 make_decision_wrapper <- function(res_list, 
                                   p_val_interim, 
                                   p_val_final,

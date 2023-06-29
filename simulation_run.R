@@ -63,12 +63,12 @@ treatment_effects <- list(
 # specify cohorts and initial compounds
 ways_of_administration=c("pill")
 #ways_of_administration=c("pill", "nasal", "IV")
-cohorts_start <- list("pill"=3)
+cohorts_start <- list("pill"=6)
 #cohorts_start <- list("pill"=3, "IV"=1, "nasal"=1)
 rand_type="block_sqrt_cap"
 
 # specify probability of a new treatment becoming available per way of administration
-prob_new_compound=c(0.2)
+prob_new_compound=c(1)
 #prob_new_compound=c(0.2,0.1,0.1)
 
 # specify initial compounds per population
@@ -94,11 +94,15 @@ sim_results <- NULL
 
 patients_per_timepoint = list(c(7,7)
                               )
-n_fin <- list(#list("TRD"=40,"PRD"=40), 
-              #list("TRD"=60,"PRD"=60), 
-              list("TRD"=80,"PRD"=80)#, 
-              #list("TRD"=100,"PRD"=100), 
-              #list("TRD"=120,"PRD"=120)
+n_fin <- list(list("TRD"=40,"PRD"=40), 
+              list("TRD"=50,"PRD"=50), 
+              list("TRD"=60,"PRD"=60), 
+              list("TRD"=70,"PRD"=70),
+              list("TRD"=80,"PRD"=80),
+              list("TRD"=90,"PRD"=90),
+              list("TRD"=100,"PRD"=100), 
+              list("TRD"=110,"PRD"=110),
+              list("TRD"=120,"PRD"=120)
               )
 rand_type <- list(#"block_1", 
                   #"block_k", 
@@ -107,16 +111,16 @@ rand_type <- list(#"block_1",
                   #"full"
                   )
 
-control_cap <- list(0.275,
-                    0.3,
-                    0.325,
-                    0.35,
-                    0.375,
-                    0.4,
-                    0.425,
-                    0.45,
-                    0.475,
-                    0.5
+control_cap <- list(#0.275,
+                    #0.3,
+                    #0.325,
+                    0.35#,
+                    #0.375,
+                    #0.4,
+                    #0.425,
+                    #0.45,
+                    #0.475,
+                    #0.5
                     )
 ancova_period <- list(#TRUE,
                       FALSE
@@ -126,16 +130,21 @@ scenarios <- expand.grid("patients_per_timepoint"=patients_per_timepoint,
                          "rand_type"=rand_type,
                          "control_cap"=control_cap,
                          "ancova_period"=ancova_period,
-                         "pvals"=list(c(20,0.1)#,
-                                      #c(1,0.1)#,
-                                      #c(0.5,0.1)
+                         "pvals"=list(#c(100000,0.1)#,
+                                      c(1,0.1)#,
+                                      #c(0.9,0.1),
+                                      #c(0.8,0.1),
+                                      #c(0.7,0.1),
+                                      #c(0.6,0.1),
+                                      #c(0.5,0.1)#,
+                                      #c(0.4,0.1)
                                       ))
 
 
 for(i in 1:nrow(scenarios)){
   sim_results_tmp <- foreach(nsim=1:nsim, .combine=rbind, .packages=c("tidyverse", "mvtnorm")) %dopar% {
     single_sim_results <- simulate_trial(cohorts_start=cohorts_start, 
-                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x*2)), 
+                                         n_int=lapply(scenarios$n_fin[[i]], function(x) ceiling(x/2)), 
                                          n_fin=scenarios$n_fin[[i]],
                                          treatment_effects=treatment_effects, 
                                          ways_of_administration=ways_of_administration,
@@ -148,7 +157,7 @@ for(i in 1:nrow(scenarios)){
                                          rand_type=scenarios$rand_type[[i]],
                                          patients_per_timepoint=scenarios$patients_per_timepoint[[i]], 
                                          prob_new_compound=prob_new_compound,
-                                         new_compounds="single",
+                                         new_compounds="multiple",
                                          max_treatments=c(6), 
                                          number_of_compounds_cap="global",
                                          #trial_end="pipeline", pipeline_size=c(10,4,4),
@@ -201,7 +210,7 @@ sim_results %>% filter(treatment_ID != "Control") %>%
 ########
 
 #write.xlsx(sim_results, "alloc_test_fixed_n8.xlsx")
-write.xlsx(sim_results, "test_equal_random.xlsx")
+write.xlsx(sim_results, "n_fut05_cap35_1k.xlsx")
 
-saveRDS(sim_results, "test_equal_random.rds")
+saveRDS(sim_results, "n_fut05_cap35_1k.rds")
 

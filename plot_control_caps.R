@@ -3,7 +3,7 @@
 ####################### SAMPLE SIZES ###########################################
 
 # analyse patients needed per platform with regard to the allocation method
-n_perPlatform <- sim_results_d035  %>% select(nsim, control_cap, admin, n_TRD) %>% 
+n_perPlatform <- sim_results2  %>% select(nsim, control_cap, admin, n_TRD) %>% 
   mutate(cap = factor(control_cap, levels = c('0.275',
                                               '0.3',
                                               '0.325',
@@ -33,7 +33,8 @@ p_nTotal <-
 #ggsave("N_per_platform.tiff", device = "tiff", width=9, height=4)
 
 # sample size per platform with boxplots
-ggplot(n_perPlatform,
+#size_platform <- 
+  ggplot(n_perPlatform,
        aes(x=n_platform,
            y=cap)) +
   #scale_y_discrete(labels=c("rcts" = "rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +  #geom_boxplot(fill="#69b3a2") +
@@ -48,7 +49,7 @@ ggplot(n_perPlatform,
   xlab("Sample size per platform") + ylab("Minimal control ratio") +
   ggtitle("Size of platform trial") 
 
-ggsave("SampleSize_comp.png", device = "png", width=6, height=5)
+ggsave("SampleSize.png", device = "png", width=6, height=5)
 
 ########## NUMBER OF CONTROLS
 
@@ -177,7 +178,7 @@ ggsave("ControlComparators_box.png", device = "png", width=7, height=5)
 ####################### ARMS ###################################################
 
 # data number of arms per admin (excluding control)
-tibble_arms <- sim_results %>% 
+tibble_arms <- sim_results2 %>% 
   mutate(cap = factor(control_cap, levels = c('0.275',
                                               '0.3',
                                               '0.325',
@@ -341,19 +342,42 @@ ggsave("rejections.png", device = "png", width=12, height=5)
 
 ####################### POWER ##################################################
 
-# data decisions in platform per admin and effect size
-pow <- sim_results_d035 %>% filter(treatment_ID != "Control") %>%
+# data decisions in platform per effect size
+pow05 <- sim_results2 %>% filter(treatment_ID != "Control") %>%
   select(nsim, control_cap, decisions_TRD, d_TRD, d_TRD_est) %>%
   mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
          d = factor(round(d_TRD,2))) %>% 
+  filter(d==0.5) %>%
+  group_by(d, decisions_TRD, control_cap, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, control_cap) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+
+pow035 <- sim_results2 %>% filter(treatment_ID != "Control") %>%
+  select(nsim, control_cap, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0.35) %>%
+  group_by(d, decisions_TRD, control_cap, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, control_cap) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+pow02 <- sim_results2 %>% filter(treatment_ID != "Control") %>%
+  select(nsim, control_cap, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0.2) %>%
+  group_by(d, decisions_TRD, control_cap, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, control_cap) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+pow0 <- sim_results2 %>% filter(treatment_ID != "Control") %>%
+  select(nsim, control_cap, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0) %>%
   group_by(d, decisions_TRD, control_cap, .drop=FALSE) %>% summarise(n=n()) %>%
   group_by(d, control_cap) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
 write.xlsx(pow, "power_cap.xlsx")
 print(xtable(pow, type = "latex"), file = "power.tex")
 
 
-pow %>%
-  ggplot(aes(x = control_cap, y = percentage,
+pow05 %>%
+  ggplot(pow05, aes(x = control_cap, y = percentage,
              group = d, 
              color = d,
              linetype = d
@@ -370,7 +394,7 @@ pow %>%
   labs(x="lower cap on placebo ratio") +
   labs(y="Power in %")
 
-ggsave("Success_rates_per_cap_just035.png", device = "png", width=9, height=6)
+ggsave("Success_rates_per_cap.png", device = "png", width=9, height=6)
 
 ##################################### estimation of effect ####################
 

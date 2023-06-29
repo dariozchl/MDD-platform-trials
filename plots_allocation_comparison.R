@@ -26,18 +26,22 @@ sim_results_both <- bind_rows(rct_add,sim_results_plat_2)
 ####################### SAMPLE SIZES ###########################################
 
 # analyse patients needed per platform with regard to the allocation method
-n_rcts <- sim_results_plat_2  %>% select(nsim, rand_type, admin, n_TRD) %>% 
+n_platform <- sim_results  %>% select(nsim, rand_type, admin, n_TRD) %>% 
   mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
                                                 "block_sqrt",
                                                 "block_sqrt_cap",
                                                 "full")))
-n_both <- sim_results_plat_2 %>%
+n_perPlatform <- sim_results %>%
+  mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
+                                                "block_sqrt",
+                                                "block_sqrt_cap",
+                                                "full"))) %>%
   group_by(nsim, Allocation) %>% summarise(n_platform = sum(n_TRD))
 
 n_perPlatform_mean <- n_perPlatform %>% 
   group_by(Allocation) %>% 
   summarise(n_platform_mean = sum(n_platform) / max(sim_results $nsim))
-write.xlsx(n_perPlatform_mean, "n_perPlatform_mean.xlsx")
+write.xlsx(n_perPlatform_mean, "n_perPlatform_mean_equal.xlsx")
 
 ##
 p_nTotal <- 
@@ -51,7 +55,7 @@ p_nTotal <-
 #ggsave("N_per_platform.tiff", device = "tiff", width=9, height=4)
 
 # sample size per platform with boxplots
-ggplot(n_both,
+ggplot(n_perPlatform,
        aes(x=n_platform,
            y=Allocation)) +
   scale_y_discrete(labels=c("rcts" = "sequential rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block_sqrt_cap"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +  #geom_boxplot(fill="#69b3a2") +
@@ -66,7 +70,7 @@ ggplot(n_both,
   xlab("Sample size per platform") + ylab("Allocation method") +
   ggtitle("Size of platform trial") 
   
-ggsave("SampleSize_equal_mixed08808150615.png", device = "png", width=8, height=5)
+ggsave("SampleSize_equal_all_025.png", device = "png", width=8, height=5)
 
 ########## NUMBER OF CONTROLS
 
@@ -159,7 +163,11 @@ ggsave("ControlComparators_box.png", device = "png", width=8, height=5)
 ####################### ARMS ###################################################
 
 # data number of arms per admin (excluding control)
-tibble_arms <- sim_results_both %>% 
+tibble_arms <- sim_results %>% 
+  mutate(Allocation =factor(rand_type, levels=c("block_1", "block_k", 
+                                                "block_sqrt",
+                                                "block_sqrt_cap",
+                                                "full"))) %>%
   filter(treatment_ID != "Control") %>% 
   group_by(nsim, Allocation) %>% count() %>%
   group_by(nsim, Allocation) %>% summarise(arms = sum(n))
@@ -173,11 +181,12 @@ write.xlsx(number_of_arms_mean, "number_of_arms.xlsx")
 ggplot(tibble_arms,
        aes(x=arms,
            y=Allocation)) +
-  scale_y_discrete(labels=c("rcts" = "sequential rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +  geom_violin(fill="#69b3a2", trim = TRUE, width=1) +
+  scale_y_discrete(labels=c("rcts" = "sequential rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +  
+  #geom_violin(fill="#69b3a2", trim = TRUE, width=1) +
   geom_boxplot(width =0.1, alpha=0.6
   ) +
   #geom_boxplot(fill="#69b3a2") +
-  xlim(10, 30)+
+  #xlim(10, 30)+
   coord_flip() +
   xlab("Treatments per platform") + ylab("Allocation method") +
   ggtitle("Number of arms per platform trial") +
@@ -393,4 +402,176 @@ sim_results_both %>% filter(patients_per_timepoint==7) %>%
   ggtitle("Estimation of effect size") #+ 
   #guides(fill=guide_legend(title="Allocation"))
 ggsave("effect_size.png", device = "png", width=12, height=5)
+
+## Characteristic 4: Rejected arms per 1000 patients
+
+
+# data decisions in platform per effect size
+pow05 <- sim_results %>% filter(treatment_ID != "Control") %>%
+  select(nsim, rand_type, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0.5) %>%
+  group_by(d, decisions_TRD, rand_type, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, rand_type) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+pow035 <- sim_results %>% filter(treatment_ID != "Control") %>%
+  select(nsim, rand_type, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0.35) %>%
+  group_by(d, decisions_TRD, rand_type, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, rand_type) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+pow02 <- sim_results %>% filter(treatment_ID != "Control") %>%
+  select(nsim, rand_type, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0.2) %>%
+  group_by(d, decisions_TRD, rand_type, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, rand_type) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+pow0 <- sim_results %>% filter(treatment_ID != "Control") %>%
+  select(nsim, rand_type, decisions_TRD, d_TRD, d_TRD_est) %>%
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>% 
+  filter(d==0) %>%
+  group_by(d, decisions_TRD, rand_type, .drop=FALSE) %>% summarise(n=n()) %>%
+  group_by(d, rand_type) %>% mutate(percentage = 100 * n / sum(n)) %>% filter(decisions_TRD == "success")
+
+
+# data for the average number of rejections per sample size
+rejections_cap <- 
+  sim_results %>% 
+  group_by(nsim, rand_type) %>% mutate(n_total = sum(n_TRD)) %>% #ungroup() %>% summarise(mean_n=mean(n_total)) #%>%
+  filter(treatment_ID != "Control") %>% #select(nsim, n_total)
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>%
+  filter(decisions_TRD == "success") %>%
+  group_by(nsim, rand_type, d) %>% mutate(n_rejections=n()) %>% select(nsim, d, n_rejections, n_total) %>%
+  #group_by(d) %>% mutate(mean_rejections = mean(n_rejections)) %>% unique() %>% 
+  group_by(rand_type, d) %>% summarize(rpp=mean(n_rejections)/mean(n_total)*1000)
+
+# date for the number of arms per effect size
+arms_cap <- 
+  sim_results %>% 
+  group_by(nsim, rand_type) %>% mutate(n_total = sum(n_TRD)) %>% #ungroup() %>% summarise(mean_n=mean(n_total)) #%>%
+  filter(treatment_ID != "Control") %>% #select(nsim, n_total)
+  mutate(decisions_TRD = factor(decisions_TRD, levels=c("success", "stopped early", "failure")),
+         d = factor(round(d_TRD,2))) %>%
+  #filter(decisions_TRD == "success") %>%
+  group_by(nsim, rand_type, d) %>% mutate(n_rejections=n()) %>% select(nsim, d, n_rejections, n_total) %>%
+  group_by(rand_type, d) %>% summarize(rpp=mean(n_rejections)/mean(n_total)*1000)
+
+
+# create combined plots of arms, rejections and power per effect size
+
+## 0.5
+data_05 <- rejections_cap %>% filter(d == "0.5") #%>%
+arms_05 <- arms_cap %>% filter(d == "0.5")
+p_05 <-  
+  ggplot() + 
+  geom_point(data=data_05, aes(x = rand_type, y = rpp,
+                               group = rand_type
+  ), color= "red", size = 2) +
+  geom_point(data=arms_05, aes(x = rand_type, y = rpp,
+                               group = rand_type, 
+                               color = rand_type
+  ), color="blue", size = 2) +
+  theme_bw() +
+  ggtitle("d=0.5") + theme(plot.title=element_text(hjust=0.5))+ 
+  geom_point(data=pow05, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  geom_line(data=pow05, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  scale_x_discrete(labels=c("rcts" = "sequential \n rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block_sqrt_cap"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +
+  labs(x="Allocation method") +
+  scale_y_continuous(
+    name = "Arms per 1000 patients",
+    limits = c(0,5),
+    sec.axis = sec_axis(~.*20, name="Power in %")
+  ) 
+
+## 0.35
+data_035 <- rejections_cap %>% filter(d == "0.35") #%>%
+arms_035 <- arms_cap %>% filter(d == "0.35")
+p_035 <-  
+  ggplot() + 
+  geom_point(data=data_035, aes(x = rand_type, y = rpp,
+                                group = rand_type
+  ), color= "red", size = 2) +
+  geom_point(data=arms_035, aes(x = rand_type, y = rpp,
+                                group = rand_type, 
+                                color = rand_type
+  ), color="blue", size = 2) +
+  theme_bw() +
+  ggtitle("d=0.35") + theme(plot.title=element_text(hjust=0.5))+ 
+  geom_point(data=pow035, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  geom_line(data=pow035, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  scale_x_discrete(labels=c("rcts" = "sequential \n rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block_sqrt_cap"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +
+  labs(x="Allocation method") +
+  scale_y_continuous(
+    name = "Arms per 1000 patients",
+    limits = c(0,5),
+    sec.axis = sec_axis(~.*20, name="Power in %")
+  ) 
+
+## 0.2
+data_02 <- rejections_cap %>% filter(d == "0.2") #%>%
+arms_02 <- arms_cap %>% filter(d == "0.2")
+p_02 <-  
+  ggplot() + 
+  geom_point(data=data_02, aes(x = rand_type, y = rpp,
+                               group = rand_type
+  ), color= "red", size = 2) +
+  geom_point(data=arms_02, aes(x = rand_type, y = rpp,
+                               group = rand_type, 
+                               color = rand_type
+  ), color="blue", size = 2) +
+  theme_bw() +
+  ggtitle("d=0.2") + theme(plot.title=element_text(hjust=0.5))+ 
+  geom_point(data=pow02, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  geom_line(data=pow02, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  scale_x_discrete(labels=c("rcts" = "sequential \n rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block_sqrt_cap"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +
+  labs(x="Allocation method") +
+  scale_y_continuous(
+    name = "Arms per 1000 patients",
+    limits = c(0,5),
+    sec.axis = sec_axis(~.*20, name="Power in %")
+  ) 
+
+## 0
+data_0 <- rejections_cap %>% filter(d == "0") #%>%
+arms_0 <- arms_cap %>% filter(d == "0")
+p_0 <-  
+  ggplot() + 
+  geom_point(data=data_0, aes(x = rand_type, y = rpp,
+                              group = rand_type
+  ), color= "red", size = 2) +
+  geom_point(data=arms_0, aes(x = rand_type, y = rpp,
+                              group = rand_type, 
+                              color = rand_type
+  ), color="blue", size = 2) +
+  theme_bw() +
+  ggtitle("d=0") + theme(plot.title=element_text(hjust=0.5))+ 
+  geom_point(data=pow0, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  geom_line(data=pow0, aes(x = rand_type, y = percentage/20), color="lightblue") +
+  scale_x_discrete(labels=c("rcts" = "sequential \n rcts", "block_1"="balanced", "block_k"="k", "block_sqrt"="sqrt(k)", "block_sqrt_cap"="sqrt(k)\n with cap", "full"="sqrt(k) with cap,\n no block")) +
+  labs(x="Allocation method") +
+  scale_y_continuous(
+    name = "Arms per 1000 patients",
+    limits = c(0,5),
+    sec.axis = sec_axis(~.*20, name="Power in %")
+  ) 
+
+#arrange the 4 plots together
+p_rejectRates_caps <- ggarrange(p_0, p_02, p_035, p_05,
+                                ncol = 2, nrow = 2,
+                                #legend = "none",
+                                common.legend = TRUE,
+                                legend = "bottom" 
+                                #legend.grob = 
+)
+annotate_figure(p_rejectRates_caps,
+                top = text_grob("Arms and rejections per 1000 patients for different control caps",
+                                #color = "red", 
+                                #face = "bold", 
+                                size = 14)
+)
+ggsave("Rejection_rates_arms_power.png", device = "png", width=9, height=7)
 
