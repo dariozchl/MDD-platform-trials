@@ -62,7 +62,8 @@ create_cohort_initial <- function(cohorts_start,
     }
     # draw a random treatment effect, control effect is fixed
     res_list$TRD[[i]]$response <- treatment_effects$TRD[[paste(name_placeholder)]][[
-      sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)]]
+      sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1,
+             prob = treatment_effects$TRD[[paste(name_placeholder)]]$probs)]]
   }
 
   for (i in 1:length(res_list$PRD)) {
@@ -77,7 +78,8 @@ create_cohort_initial <- function(cohorts_start,
                                                    names(res_list$PRD)))+1) 
     }
     res_list$PRD[[i]]$response <- treatment_effects$PRD[[paste(name_placeholder)]][[
-      sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)]]
+      sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1,
+             prob = treatment_effects$TRD[[paste(name_placeholder)]]$probs)]]
   }
 
   return(res_list)

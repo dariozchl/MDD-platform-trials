@@ -23,7 +23,8 @@ create_cohort_new <- function(res_list,
                           end_timestamp = NULL,
                           response = treatment_effects$TRD[[paste(name_placeholder)]][[
                                                             #sample position in list with possible effects
-                                                            sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1)
+                                                            sample(x=1:(length(treatment_effects$TRD[[paste(name_placeholder)]])-1), size=1, 
+                                                                   prob = treatment_effects$TRD[[paste(name_placeholder)]]$probs)
                                                             ]],
                           data = NULL,
                           n = NULL #rep(NA, length(res_list$TRD[[paste0(way_of_administration, "_Control")]]$n))
@@ -50,7 +51,8 @@ create_cohort_new <- function(res_list,
                           start_timestamp = timestamp,
                           end_timestamp = NULL,
                           response = treatment_effects$PRD[[paste(name_placeholder)]][[
-                                                            sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1)
+                                                            sample(x=1:(length(treatment_effects$PRD[[paste(name_placeholder)]])-1), size=1,
+                                                                   prob = treatment_effects$PRD[[paste(name_placeholder)]]$probs)
                                                             ]],
                           data = NULL,
                           n = NULL #rep(NA, length(res_list$PRD[[paste0(way_of_administration, "_Control")]]$n))
